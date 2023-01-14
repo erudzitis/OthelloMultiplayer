@@ -1,6 +1,6 @@
-package networking;
+package src.networking;
 
-public class ProtocolProvider {
+public class Protocol {
     private static final String HELLO = "HELLO";
     private static final String SEPERATOR = "~";
 
@@ -8,10 +8,10 @@ public class ProtocolProvider {
     /**
      * Enforcing that an instance can't be created of this class
      */
-    private ProtocolProvider() {}
+    private Protocol() {}
 
     /**
-     * Protocol method that formats user's desire to claim a username to the server accordingly.
+     * Protocol method that formats user's desire to claim a username to the src.server accordingly.
      *
      * @param username String, desired username
      * @return String, formatted protocol message

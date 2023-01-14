@@ -1,4 +1,4 @@
-package client.ui;
+package src.client.ui;
 
 public class ClientTUI {
 }
