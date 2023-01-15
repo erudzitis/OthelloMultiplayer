@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 class BoardTest {
     private Board board;
 
@@ -35,5 +37,32 @@ class BoardTest {
         Assertions.assertEquals(BoardMark.WHITE.getOpposite(), BoardMark.BLACK);
         Assertions.assertEquals(BoardMark.BLACK.getOpposite(), BoardMark.WHITE);
         Assertions.assertEquals(BoardMark.EMPTY.getOpposite(), BoardMark.EMPTY);
+    }
+
+    /**
+     * Tests if the valid moves for each board mark get calculated correctly.
+     * Initially, black mark should have 4 possible moves to perform
+     */
+    @Test
+    void testGetValidMoves() {
+        // Getting black valid moves
+        List<List<Integer>> validMovesBlack = board.getValidMoves(BoardMark.BLACK);
+        Assertions.assertEquals(validMovesBlack.size(), 4);
+
+        // Setting black move
+        List<Integer> blackMove = validMovesBlack.get(0);
+        board.flipFields(blackMove.get(0),
+                blackMove.get(1),
+                blackMove.get(2),
+                blackMove.get(3),
+                blackMove.get(4),
+                blackMove.get(5),
+                BoardMark.BLACK);
+
+        System.out.println(board);
+
+        // Getting white valid moves
+        List<List<Integer>> whiteValidMoves = board.getValidMoves(BoardMark.WHITE);
+        Assertions.assertEquals(whiteValidMoves.size(), 3);
     }
 }
