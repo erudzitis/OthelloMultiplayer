@@ -109,7 +109,6 @@ public class Board {
      * @throws IllegalArgumentException
      */
     /*@requires isField(index);
-      @requires isFieldEmpty(index);
       @signals_only IllegalArgumentException;
       @assignable fields;*/
     public void setField(int index, BoardMark mark) throws IllegalArgumentException {
@@ -129,6 +128,11 @@ public class Board {
      * @param extensionColumn int, horizontal extension point
      * @param mark BoardMark enum type to set
      */
+    /*@requires isField(getIndex(startRow, startCol));
+      @requires isField(getIndex(endRow, endColumn));
+      @requires mark.equals(BoardMark.WHITE) || mark.equals(BoardMark.BLACK);
+      @requires (\exists int j; j > 0 && j < EXTENSION_PAIRS.length; EXTENSION_PAIRS[j][0] == extensionRow && EXTENSION_PAIRS[j][1] == extensionColumn);
+      @assignable fields;*/
     public void flipFields(int startRow, int startCol, int endRow, int endColumn, int extensionRow, int extensionColumn, BoardMark mark) {
         // Setting the target field that will complete the outflanking
         setField(getIndex(startRow, startCol), mark);
