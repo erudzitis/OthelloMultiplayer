@@ -4,8 +4,11 @@ import src.game.players.Player;
 
 public class BoardMove {
     private Player player;
-    private BoardMark mark;
-    private int location;
+    private /*@spec_public;*/ BoardMark mark;
+    private /*@spec_public;*/ int location;
+
+    /*@public invariant mark.equals(BoardMark.WHITE) || mark.equals(BoardMark.BLACK);
+      @public invariant location >= 0 && location < (Board.DIMENSION * Board.DIMENSION);*/
 
     /**
      * Constructor that initializes the object
@@ -23,6 +26,7 @@ public class BoardMove {
      * Method that returns the Player of a particular move
      * @return Player
      */
+    /*@pure; @*/
     public Player getPlayer() {
         return this.player;
     }
@@ -31,6 +35,7 @@ public class BoardMove {
      * Method that returns the location index on the board of a particular move
      * @return int, index on the board
      */
+    /*@pure; @*/
     public int getLocation() {
         return this.location;
     }
@@ -39,6 +44,7 @@ public class BoardMove {
      * Method that returns the particular moves mark type
      * @return BoardMark
      */
+    /*@pure; @*/
     public BoardMark getMark() {
         return this.mark;
     }

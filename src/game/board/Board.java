@@ -47,10 +47,10 @@ public class Board {
      * @param populatedFields BoardMark[] array
      */
     /*@ requires populatedFields.length == DIMENSION * DIMENSION;
-      @ requires populatedFields[getIndex(5, 4)].equals(BoardMark.BLACK);
-      @ requires populatedFields[getIndex(4, 5)].equals(BoardMark.BLACK);
+      @ requires populatedFields[getIndex(4, 3)].equals(BoardMark.BLACK);
+      @ requires populatedFields[getIndex(3, 4)].equals(BoardMark.BLACK);
+      @ requires populatedFields[getIndex(3, 3)].equals(BoardMark.WHITE);
       @ requires populatedFields[getIndex(4, 4)].equals(BoardMark.WHITE);
-      @ requires populatedFields[getIndex(5, 5)].equals(BoardMark.WHITE);
       @ assignable fields;
       @*/
     public Board(BoardMark[] populatedFields) {
