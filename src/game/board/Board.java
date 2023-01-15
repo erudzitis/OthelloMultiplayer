@@ -119,6 +119,16 @@ public class Board {
         this.fields[index] = mark;
     }
 
+    /**
+     * Method that sets the mark position and flips all the fields in between the starting (just set mark) and end mark
+     * @param startRow int, row location of new mark
+     * @param startCol int, column location of new mark
+     * @param endRow int, row location of supporting mark
+     * @param endColumn int, column location of supporting mark
+     * @param extensionRow int, vertical extension point
+     * @param extensionColumn int, horizontal extension point
+     * @param mark BoardMark enum type to set
+     */
     public void flipFields(int startRow, int startCol, int endRow, int endColumn, int extensionRow, int extensionColumn, BoardMark mark) {
         // Setting the target field that will complete the outflanking
         setField(getIndex(startRow, startCol), mark);
