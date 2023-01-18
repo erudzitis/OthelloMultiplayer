@@ -77,20 +77,22 @@ public class ClientHandler implements Runnable {
                     this.acknowledgeHandshake(line);
                 } catch (HandshakeFailed e) {
                     // We haven't performed the handshake yet,
-                    // waiting for the client to send the initialization HELLO sequence
+                    // waiting for the client to send the initialization HELLO sequence,
                     // ignoring all other messages otherwise
                     continue;
                 }
 
                 // Handshake has been performed, we handle other valid 'commands'
-                // Retrieving message 'contents'
-                // TODO: Implement other command handling
+                this.handleIncomingCommand(line);
             }
         } catch (IOException e) {
             //TODO: Read up on what to do in this case
         }
     }
 
+    /**
+     * Internal method that sends acknowledgment HELLO protocol sequence to the client
+     */
     private void sendAcknowledgeHandshake() {
         // Sending the handshake acknowledgment to the client
         this.sendMessage(Protocol.helloFormat(Server.SERVER_DESCRIPTION, Server.SUPPORTED_EXTENSIONS));
@@ -131,10 +133,45 @@ public class ClientHandler implements Runnable {
     }
 
     /**
+     * Internal method that handles all incoming commands from the client
+     *
+     * @param line String line that we received from the server
+     */
+    /*@requires line != null; @*/
+    private void handleIncomingCommand(String line) {
+        String command = Protocol.commandExtract(line);
+
+        switch (command) {
+            case Protocol.LOGIN:
+                // A user can login if the provided username is not taken
+                String clientDesiredUsername = Protocol.loginExtract(line);
+
+                System.out.println("Login request received " + clientDesiredUsername);
+
+                // Username is taken, client has to try to login again
+                if (this.server.isUsernameTaken(clientDesiredUsername)) {
+                    this.sendMessage(Protocol.alreadyLoggedInFormat());
+                } else {
+                    // Client login accepted
+                    this.server.setNewClient(clientDesiredUsername, this.clientSocket);
+                    this.sendMessage(Protocol.loginFormat());
+                }
+
+            case Protocol.LIST:
+                // Sends client the list of all logged in user usernames
+                this.sendMessage(Protocol.listFormat(this.server.getUserUsernames()));
+                break;
+            default:
+                // Unsupported command, 'do nothing'
+        }
+    }
+
+    /**
      * Method that sends already protocol formatted message to the client socket output
      *
      * @param message String protocol message
      */
+    /*@requires message != null; @*/
     public void sendMessage(String message) {
         this.clientSocketOutput.println(message);
         this.clientSocketOutput.flush();

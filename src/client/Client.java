@@ -47,7 +47,6 @@ public class Client {
      */
     private List<String> serverSupportedExtensions = new ArrayList<>();
 
-
     /**
      * Stores the list of all supported extensions by the client
      */
@@ -74,6 +73,7 @@ public class Client {
      *
      * @return true if client has connected to a server and handshake is established
      */
+    /*@ensures socket != null && handshakeEstablished ==> \result == true; @*/
     public boolean isHandshakeEstablished() {
         return this.socket != null && this.handshakeEstablished;
     }
@@ -83,8 +83,17 @@ public class Client {
      *
      * @return
      */
+    /*@ensures socket != null && successfullyLoggedIn ==> \result == true; @*/
     public boolean isSuccessfullyLoggedIn() {
         return this.socket != null && this.successfullyLoggedIn;
+    }
+
+    /**
+     * Method that returns the username of the client
+     * @return
+     */
+    public String getUsername() {
+        return this.username;
     }
 
     /**
@@ -127,11 +136,8 @@ public class Client {
                         continue;
                     }
 
-                    // Retrieving message 'contents'
-                    String[] lineSplit = Protocol.split(line);
-
                     // Handling all incoming commands
-                    handleIncomingCommand(lineSplit);
+                    handleIncomingCommand(line);
 
                     //TODO: Implement incoming command handling on client
                 }
@@ -146,9 +152,12 @@ public class Client {
     /**
      * Internal method that attempts to login into the server
      */
+    /*@requires !successfullyLoggedIn; @*/
     private void attemptLogin() {
         // Checking if the client is already logged in
         if (this.successfullyLoggedIn) return;
+
+        System.out.println("Log in request issued");
 
         this.sendMessage(Protocol.loginFormat(this.username));
     }
@@ -168,6 +177,7 @@ public class Client {
      * @throws HandshakeFailed if the incoming message is not HELLO protocol adherent
      */
     /*@requires line != null;
+      @requires !handshakeEstablished;
       @assignable serverSupportedExtensions;
       @assignable handshakeEstablished;
       @signals_only HandshakeFailed; */
@@ -197,10 +207,11 @@ public class Client {
     /**
      * Internal method that handles all incoming commands from the server client handler to the client
      *
-     * @param commands
+     * @param line String line that we received from the server
      */
-    private void handleIncomingCommand(String[] commands) {
-        String command = commands[0];
+    /*@requires line != null; @*/
+    private void handleIncomingCommand(String line) {
+        String command = Protocol.commandExtract(line);
 
         switch (command) {
             case Protocol.LOGIN:

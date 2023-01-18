@@ -1,14 +1,13 @@
 package server;
 
 import game.BoardGame;
+import game.players.HumanPlayer;
 import game.players.Player;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Server {
     /*@public invariant (\forall int i; i > 0 && i < queue.size();
@@ -25,23 +24,23 @@ public class Server {
     /**
      * Stores username to client socket pairs
      */
-    private Map<String, Socket> clientSockets;
+    private Map<String, Socket> clientSockets = new HashMap<>();
 
     /**
      * Stores room name to board game pairs
      * Room name consists of the combination of both player usernames
      */
-    private /*@spec_public; @*/ Map<String, BoardGame> rooms;
+    private /*@spec_public; @*/ Map<String, BoardGame> rooms = new HashMap<>();
 
     /**
      * Stores username to player pairs
      */
-    private /*@spec_public; @*/ Map<String, Player> users;
+    private /*@spec_public; @*/ Map<String, Player> users = new HashMap<>();
 
     /**
      * Stores the list of all player usernames that are in the queue
      */
-    private /*@spec_public; @*/ List<String> queue;
+    private /*@spec_public; @*/ List<String> queue = new ArrayList<>();
 
     /**
      * Stores the list of all supported extensions by the server
@@ -52,6 +51,35 @@ public class Server {
      * Holds the description of the server
      */
     public static final String SERVER_DESCRIPTION = "Yellow 7 Server";
+
+    /**
+     * Method that returns the set of all connected user usernames on the server
+     * @return
+     */
+    /*@pure; @*/
+    public Set<String> getUserUsernames() {
+        return this.users.keySet();
+    }
+
+    /**
+     * Method that indicates whether a provided username is available on the server
+     * @param username String, desired username
+     * @return true / false
+     */
+    /*@pure; @*/
+    public boolean isUsernameTaken(String username) {
+        return this.users.containsKey(username);
+    }
+
+    /**
+     * Method that sets a client username mapped to their socket, username mapped to their player
+     * @param username
+     * @param socket
+     */
+    public void setNewClient(String username, Socket socket) {
+        this.users.put(username, null); // TODO: Consider the keeping track of users implementation
+        this.clientSockets.put(username, socket);
+    }
 
     /**
      * Method that attempts to start the server on a 'randomly' assigned port

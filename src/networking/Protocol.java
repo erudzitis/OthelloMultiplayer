@@ -2,6 +2,7 @@ package networking;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,6 +44,16 @@ public class Protocol {
      */
     public static String[] split(String message) {
         return message.split(SEPERATOR);
+    }
+
+    /**
+     * Method that extracts the main protocol method out of protocol message
+     *
+     * @param message String protocol message
+     * @return String main protocol command
+     */
+    public static String commandExtract(String message) {
+        return split(message)[0];
     }
 
     /**
@@ -99,6 +110,16 @@ public class Protocol {
     }
 
     /**
+     * Method that extracts the provided user username from logic protocol message
+     *
+     * @param message String protocol message
+     * @return String, user provided username
+     */
+    public static String loginExtract(String message) {
+        return split(message)[1];
+    }
+
+    /**
      * Method that generates String message for server that gets sent back to client to indicate a successful login
      *
      * LOGIN
@@ -139,10 +160,10 @@ public class Protocol {
      *
      * LIST[~username]*
      *
-     * @param usernames List<String> List of usernames of people that are connected to the server
+     * @param usernames Collection<String> Collection of usernames of people that are connected to the server
      * @return String formatted message
      */
-    public static String listFormat(List<String> usernames) {
+    public static String listFormat(Collection<String> usernames) {
         // Formatting the main protocol message part
         StringBuilder protocolMessageBuilder = new StringBuilder(LIST);
         // Adding all usernames
