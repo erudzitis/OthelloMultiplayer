@@ -1,8 +1,8 @@
 package networking;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Networking protocol used by the server and client for interchangeable communication.
@@ -15,20 +15,35 @@ import java.util.Objects;
  * [argument]+ optional input or argument 1 or more times.
  */
 public class Protocol {
-    private static final String HELLO = "HELLO";
-    private static final String LOGIN = "LOGIN";
-    private static final String SEPERATOR = "~";
-    private static final String ALREADYLOGGEDIN = "ALREADYLOGGEDIN";
-    private static final String LIST = "LIST";
-    private static final String QUEUE = "QUEUE";
-    private static final String NEWGAME = "NEWGAME";
-    private static final String MOVE = "MOVE";
-    private static final String GAMEOVER = "GAMEOVER";
-    private static final String ERROR = "ERROR";
+    public static final String HELLO = "HELLO";
+    public static final String LOGIN = "LOGIN";
+    public static final String SEPERATOR = "~";
+    public static final String ALREADYLOGGEDIN = "ALREADYLOGGEDIN";
+    public static final String LIST = "LIST";
+    public static final String QUEUE = "QUEUE";
+    public static final String NEWGAME = "NEWGAME";
+    public static final String MOVE = "MOVE";
+    public static final String GAMEOVER = "GAMEOVER";
+    public static final String ERROR = "ERROR";
 
     public static final String DISCONNECT = "DISCONNECT";
     public static final String VICTORY = "VICTORY";
     public static final String DRAW = "DRAW";
+
+    /**
+     * Enforcing the constructor to be private, so no instances could be made
+     */
+    private Protocol() {}
+
+    /**
+     * Method that returns an array of protocol message 'contents'
+     *
+     * @param message String protocol message
+     * @return String[] message 'contents'
+     */
+    public static String[] split(String message) {
+        return message.split(SEPERATOR);
+    }
 
     /**
      * Method that generates String for initial message that gets sent from the client after establishing connection,'
@@ -40,13 +55,35 @@ public class Protocol {
      * @param extensions List<String> supported extensions by the server / client
      * @return String formatted message
      */
-    public String hello(String description, List<String> extensions) {
+    public static String helloFormat(String description, List<String> extensions) {
         // Formatting the main protocol message part
-        String protocolMessage = HELLO + SEPERATOR + description;
+        StringBuilder protocolMessageBuilder = new StringBuilder(HELLO + SEPERATOR + description);
         // Adding all extensions, if any
-        for (String extension: extensions) protocolMessage += SEPERATOR + extension;
+        for (String extension: extensions) protocolMessageBuilder.append(SEPERATOR + extension);
 
-        return protocolMessage;
+        return protocolMessageBuilder.toString();
+    }
+
+    /**
+     * Method that formats hello protocol message and extracts all supported extensions
+     *
+     * @param message String protocol HELLO message
+     * @return null if the protocol message is not HELLO, List<String> supported extensions otherwise
+     */
+    public static List<String> helloExtract(String message) {
+        String[] messageSplit = split(message);
+        String messageHello = messageSplit[0];
+
+        // Checking if message adheres to the protocol
+        if (!messageHello.equals(HELLO)) return null;
+
+        // Checking if there are even any extensions
+        if (messageSplit.length == 2) return new ArrayList<>();
+
+        // Otherwise, all extensions (if any) are found after description
+        String[] extensions = Arrays.copyOfRange(messageSplit, 2, messageSplit.length);
+
+        return new ArrayList<>(Arrays.asList(extensions));
     }
 
     /**
@@ -57,7 +94,7 @@ public class Protocol {
      * @param username String, desired username
      * @return String formatted message
      */
-    public String login(String username) {
+    public static String loginFormat(String username) {
         return LOGIN + SEPERATOR + username;
     }
 
@@ -68,7 +105,7 @@ public class Protocol {
      * .
      * @return String formatted message
      */
-    public String login() {
+    public static String loginFormat() {
         return LOGIN;
     }
 
@@ -80,7 +117,7 @@ public class Protocol {
      *
      * @return String formatted message
      */
-    public String alreadyLoggedIn() {
+    public static String alreadyLoggedInFormat() {
         return ALREADYLOGGEDIN;
     }
 
@@ -92,7 +129,7 @@ public class Protocol {
      *
      * @return String formatted message
      */
-    public String list() {
+    public static String listFormat() {
         return LIST;
     }
 
@@ -105,13 +142,13 @@ public class Protocol {
      * @param usernames List<String> List of usernames of people that are connected to the server
      * @return String formatted message
      */
-    public String list(List<String> usernames) {
+    public static String listFormat(List<String> usernames) {
         // Formatting the main protocol message part
-        String protocolMessage = LIST;
+        StringBuilder protocolMessageBuilder = new StringBuilder(LIST);
         // Adding all usernames
-        for (String username: usernames) protocolMessage += SEPERATOR + username;
+        for (String username: usernames) protocolMessageBuilder.append(SEPERATOR + username);
 
-        return protocolMessage;
+        return protocolMessageBuilder.toString();
     }
 
     /**
@@ -124,7 +161,7 @@ public class Protocol {
      *
      * @return String formatted message
      */
-    public String queue() {
+    public static String queueFormat() {
         return QUEUE;
     }
 
@@ -137,7 +174,7 @@ public class Protocol {
      * @param username2 String, username of the second player that was placed into the game
      * @return String formatted message
      */
-    public String newGame(String username1, String username2) {
+    public static String newGameFormat(String username1, String username2) {
         return NEWGAME + SEPERATOR + username1 + SEPERATOR + username2;
     }
 
@@ -151,7 +188,7 @@ public class Protocol {
      * @param location int, location on board
      * @return String formatted message
      */
-    public String move(int location) {
+    public static String moveFormat(int location) {
         return MOVE + SEPERATOR + location;
     }
 
@@ -164,8 +201,8 @@ public class Protocol {
      * @param winner
      * @return String formatted message
      */
-    public String gameOver(String reason, String winner) {
-        return GAMEOVER + SEPERATOR + reason + (Objects.isNull(winner) ? "" : SEPERATOR + winner);
+    public static String gameOverFormat(String reason, String winner) {
+        return GAMEOVER + SEPERATOR + reason + ((winner == null) ? "" : SEPERATOR + winner);
     }
 
     /**
@@ -175,7 +212,7 @@ public class Protocol {
      *
      * @return String formatted message
      */
-    public String error() {
+    public static String errorFormat() {
         return ERROR;
     }
 }
