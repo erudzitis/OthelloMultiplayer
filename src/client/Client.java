@@ -89,9 +89,23 @@ public class Client {
     }
 
     /**
+     * Method that allows to change client username unless they have successfully logged in
+     * @param username
+     */
+    /*@requires desiredUsername != null;
+      @requires !successfullyLoggedIn;
+      @assignable username;*/
+    public void setUsername(String desiredUsername) {
+        if (this.isSuccessfullyLoggedIn()) return;
+
+        this.username = desiredUsername;
+    }
+
+    /**
      * Method that returns the username of the client
      * @return
      */
+    /*@pure; @*/
     public String getUsername() {
         return this.username;
     }
@@ -138,8 +152,6 @@ public class Client {
 
                     // Handling all incoming commands
                     handleIncomingCommand(line);
-
-                    //TODO: Implement incoming command handling on client
                 }
             } catch (IOException e) {
                 //TODO: Read up on what to do in this case
@@ -155,7 +167,7 @@ public class Client {
     /*@requires !successfullyLoggedIn; @*/
     private void attemptLogin() {
         // Checking if the client is already logged in
-        if (this.successfullyLoggedIn) return;
+        if (this.isSuccessfullyLoggedIn()) return;
 
         this.sendMessage(Protocol.loginFormat(this.username));
     }
@@ -189,7 +201,7 @@ public class Client {
       @signals_only HandshakeFailed; */
     private void handleIncomingHandshake(String line) throws HandshakeFailed {
         // Handshake is already established
-        if (this.handshakeEstablished) return;
+        if (this.isHandshakeEstablished()) return;
 
         // Getting the supported extensions extracted from server protocol message
         List<String> supportedExtensions = Protocol.helloExtract(line);

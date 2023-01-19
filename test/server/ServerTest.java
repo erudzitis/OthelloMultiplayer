@@ -16,6 +16,7 @@ class ServerTest {
     private static boolean serverStarted = false;
     private static Client client;
     private static String RESERVED_USERNAME = "testClient";
+    private static String AVAILABLE_USERNAME = "Bob";
 
     @BeforeEach
     void init() {
@@ -49,7 +50,7 @@ class ServerTest {
      */
     @Test
     void testClientLogin() throws UnknownHostException, InterruptedException {
-        Client clientTwo = new Client("Bob");
+        Client clientTwo = new Client(AVAILABLE_USERNAME);
         clientTwo.connect(InetAddress.getLocalHost(), server.getPort());
 
         Thread.sleep(2000);
@@ -58,18 +59,27 @@ class ServerTest {
     }
 
     /**
-     * Tests if a client can't login when a user with the provided username has already been logged in the server
+     * Tests if a client can't login when a user with the provided username has already been logged in the server,
+     * can successfully login afterwards choosing a new username
      */
     @Test
     void testClientLoginExisting() throws UnknownHostException, InterruptedException {
         client.connect(InetAddress.getLocalHost(), server.getPort());
         Thread.sleep(2000);
 
+        // Logging in when a client with provided username already exists
         Client clientTwo = new Client(RESERVED_USERNAME);
         clientTwo.connect(InetAddress.getLocalHost(), server.getPort());
         Thread.sleep(2000);
 
         Assertions.assertFalse(clientTwo.isSuccessfullyLoggedIn());
+
+        // Changing client username
+        clientTwo.setUsername(AVAILABLE_USERNAME);
+        clientTwo.sendMessage(Protocol.loginFormat(clientTwo.getUsername()));
+        Thread.sleep(2000);
+
+        Assertions.assertTrue(clientTwo.isSuccessfullyLoggedIn());
     }
 
     /**
