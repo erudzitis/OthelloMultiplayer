@@ -146,8 +146,6 @@ public class ClientHandler implements Runnable {
                 // A user can login if the provided username is not taken
                 String clientDesiredUsername = Protocol.loginExtract(line);
 
-                System.out.println("Login request received " + clientDesiredUsername);
-
                 // Username is taken, client has to try to login again
                 if (this.server.isUsernameTaken(clientDesiredUsername)) {
                     this.sendMessage(Protocol.alreadyLoggedInFormat());
@@ -161,6 +159,9 @@ public class ClientHandler implements Runnable {
                 // Sends client the list of all logged in user usernames
                 this.sendMessage(Protocol.listFormat(this.server.getUserUsernames()));
                 break;
+            case Protocol.QUEUE:
+                // Client wants to join \ leave the queue (if already placed in the queue)
+                this.server.setQueue(this.clientSocket);
             default:
                 // Unsupported command, 'do nothing'
         }

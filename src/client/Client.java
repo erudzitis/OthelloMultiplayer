@@ -157,8 +157,6 @@ public class Client {
         // Checking if the client is already logged in
         if (this.successfullyLoggedIn) return;
 
-        System.out.println("Log in request issued");
-
         this.sendMessage(Protocol.loginFormat(this.username));
     }
 
@@ -167,6 +165,14 @@ public class Client {
      */
     private void sendInitializeHandshake() {
         this.sendMessage(Protocol.helloFormat(Client.CLIENT_DESCRIPTION, Client.SUPPORTED_EXTENSIONS));
+    }
+
+    /**
+     * Internal method that joins the player queue waiting for a game, if the client is already in the queue,
+     * calling this method again will remove him from it
+     */
+    private void joinQueue() {
+        this.sendMessage(Protocol.queueFormat());
     }
 
     /**
@@ -222,6 +228,9 @@ public class Client {
                 // A user with the username that we provided is already logged in
                 this.successfullyLoggedIn = false;
                 //TODO: Implement a way to ask user again for a new username and attempt to login
+                break;
+            case Protocol.LIST:
+                //TODO: Forward the list of online users somewhere
                 break;
             default:
                 // Unsupported command, 'do nothing'

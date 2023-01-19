@@ -22,9 +22,9 @@ public class Server {
     private ServerSocket serverSocket;
 
     /**
-     * Stores username to client socket pairs
+     * Stores client socket to client username pairs
      */
-    private Map<String, Socket> clientSockets = new HashMap<>();
+    private Map<Socket, String> clientSockets = new HashMap<>();
 
     /**
      * Stores room name to board game pairs
@@ -78,7 +78,33 @@ public class Server {
      */
     public void setNewClient(String username, Socket socket) {
         this.users.put(username, null); // TODO: Consider the keeping track of users implementation
-        this.clientSockets.put(username, socket);
+        this.clientSockets.put(socket, username);
+    }
+
+    /**
+     * Method that adds user to the queue, removes from the queue if already in the queue
+     * @param clientSocket Socket of the particular client
+     */
+    public void setQueue(Socket clientSocket) {
+        // Getting the user username
+        String clientUsername = this.clientSockets.get(clientSocket);
+
+        // Check if the client even exists?
+        if (clientUsername == null) return;
+
+        // Check if the user is already in the queue
+        if (this.queue.contains(clientUsername)) {
+            this.queue.remove(clientUsername);
+        } else {
+            this.queue.add(clientUsername);
+        }
+    }
+
+    /**
+     * Method that returns the list of client usernames that are in waiting queue for a game
+     */
+    public List<String> getQueue() {
+        return this.queue;
     }
 
     /**
