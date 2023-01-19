@@ -151,7 +151,7 @@ public class ClientHandler implements Runnable {
                     this.sendMessage(Protocol.alreadyLoggedInFormat());
                 } else {
                     // Client login accepted
-                    this.server.setNewClient(clientDesiredUsername, this.clientSocket);
+                    this.server.setNewClient(clientDesiredUsername, this);
                     this.sendMessage(Protocol.loginFormat());
                 }
 
@@ -161,7 +161,7 @@ public class ClientHandler implements Runnable {
                 break;
             case Protocol.QUEUE:
                 // Client wants to join \ leave the queue (if already placed in the queue)
-                this.server.setQueue(this.clientSocket);
+                this.server.setQueue(this);
             default:
                 // Unsupported command, 'do nothing'
         }

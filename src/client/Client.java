@@ -244,6 +244,9 @@ public class Client {
             case Protocol.LIST:
                 //TODO: Forward the list of online users somewhere
                 break;
+            case Protocol.NEWGAME:
+                //TODO: Initialize client current game and keep track of it
+                break;
             default:
                 // Unsupported command, 'do nothing'
         }

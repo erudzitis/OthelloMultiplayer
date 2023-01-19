@@ -102,4 +102,22 @@ class ServerTest {
 
         Assertions.assertFalse(server.getQueue().contains(client.getUsername()));
     }
+
+    /**
+     * Tests if server successfully creates a game room for 2 clients that join the queue
+     */
+    @Test
+    void testServerNewGameCreation() throws UnknownHostException, InterruptedException {
+        client.connect(InetAddress.getLocalHost(), server.getPort());
+        Client clientTwo = new Client(AVAILABLE_USERNAME);
+        clientTwo.connect(InetAddress.getLocalHost(), server.getPort());
+
+        Thread.sleep(2000);
+        client.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+        clientTwo.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+
+        Assertions.assertTrue(server.getRooms().keySet().size() == 1);
+    }
 }

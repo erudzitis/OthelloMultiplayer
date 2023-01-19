@@ -1,13 +1,14 @@
 package server;
 
+import client.Client;
 import game.BoardGame;
-import game.players.HumanPlayer;
 import game.players.Player;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Server {
     /*@public invariant (\forall int i; i > 0 && i < queue.size();
@@ -22,15 +23,20 @@ public class Server {
     private ServerSocket serverSocket;
 
     /**
-     * Stores client socket to client username pairs
+     * Stores client handler to client username pairs
      */
-    private Map<Socket, String> clientSockets = new HashMap<>();
+    private Map<ClientHandler, String> clientHandlers = new HashMap<>();
+
+    /**
+     * Stores client username to client handler pairs
+     */
+    private Map<String, ClientHandler> clientHandlersReverse = new HashMap<>();
 
     /**
      * Stores room name to board game pairs
      * Room name consists of the combination of both player usernames
      */
-    private /*@spec_public; @*/ Map<String, BoardGame> rooms = new HashMap<>();
+    protected /*@spec_public; @*/ Map<String, BoardGame> rooms = new HashMap<>();
 
     /**
      * Stores username to player pairs
@@ -40,7 +46,7 @@ public class Server {
     /**
      * Stores the list of all player usernames that are in the queue
      */
-    private /*@spec_public; @*/ List<String> queue = new ArrayList<>();
+    protected  /*@spec_public; @*/ List<String> queue = new ArrayList<>();
 
     /**
      * Stores the list of all supported extensions by the server
@@ -72,31 +78,38 @@ public class Server {
     }
 
     /**
-     * Method that sets a client username mapped to their socket, username mapped to their player
-     * @param username
-     * @param socket
+     * Method that initializes mappings between client username and it's handler
+     * @param username String, username of the authenticated client
+     * @param clientHandler ClientHandler allocated to that client connection
      */
-    public void setNewClient(String username, Socket socket) {
+    public void setNewClient(String username, ClientHandler clientHandler) {
         this.users.put(username, null); // TODO: Consider the keeping track of users implementation
-        this.clientSockets.put(socket, username);
+        this.clientHandlers.put(clientHandler, username);
+        this.clientHandlersReverse.put(username, clientHandler);
     }
 
     /**
-     * Method that adds user to the queue, removes from the queue if already in the queue
-     * @param clientSocket Socket of the particular client
+     * Method that adds user to the queue, removes from the queue if already in the queue.
+     * Synchronized since could experience concurrency problems by one of the ClientHandler threads
+     * @param clientHandler ClientHandler of the particular client
      */
-    public void setQueue(Socket clientSocket) {
-        // Getting the user username
-        String clientUsername = this.clientSockets.get(clientSocket);
+    public void setQueue(ClientHandler clientHandler) {
+        synchronized (this.queue) {
+            // Getting the user username
+            String clientUsername = this.clientHandlers.get(clientHandler);
 
-        // Check if the client even exists?
-        if (clientUsername == null) return;
+            // Check if the client even exists?
+            if (clientUsername == null) return;
 
-        // Check if the user is already in the queue
-        if (this.queue.contains(clientUsername)) {
-            this.queue.remove(clientUsername);
-        } else {
-            this.queue.add(clientUsername);
+            // Check if the user is already in the queue
+            if (this.queue.contains(clientUsername)) {
+                this.queue.remove(clientUsername);
+            } else {
+                this.queue.add(clientUsername);
+            }
+
+            // Notifying 'queue' thread
+            this.queue.notify();
         }
     }
 
@@ -105,6 +118,10 @@ public class Server {
      */
     public List<String> getQueue() {
         return this.queue;
+    }
+
+    public Map<String, BoardGame> getRooms() {
+        return this.rooms;
     }
 
     /**
@@ -140,6 +157,9 @@ public class Server {
             }
         }).start();
 
+        // Queue thread that handles match creation
+        new Thread(new QueueHandler(this)).start();
+
         // Everything was a success
         return true;
     }
@@ -147,9 +167,25 @@ public class Server {
     /**
      * Method that broadcasts already formatted message according to the protocol in a specific game room
      */
-    /*@requires game != null && message != null; @*/
-    public void broadCastMessage(BoardGame game, String message) {
-        //TODO: Implement
+    public void broadCastMessage(String roomName, String message) {
+        // Check if a game associated with the provided room name exists
+        BoardGame roomGame = this.rooms.get(roomName);
+
+        // Room game not found
+        if (roomGame == null) return;
+
+        // Otherwise getting all room player usernames
+        List<String> roomUsernames = roomGame.getPlayers()
+                                    .stream()
+                                    .map(player -> player.getUsername())
+                                    .collect(Collectors.toList());
+
+        // Going over all usernames
+        for (String username: roomUsernames) {
+            // Getting clients handler and forwarding the message
+            ClientHandler clientHandler = this.clientHandlersReverse.get(username);
+            clientHandler.sendMessage(message);
+        }
     }
 
     /**
