@@ -1,9 +1,6 @@
 package networking;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Networking protocol used by the server and client for interchangeable communication.
@@ -248,6 +245,24 @@ public class Protocol {
     }
 
     /**
+     * Method that extracts the game over reason protocol message
+     * @param message String protocol message
+     * @return String reason
+     */
+    public static String gameOverExtractReason(String message) {
+        return split(message)[1];
+    }
+
+    /**
+     * Method that optionally the winner from protocol message
+     * @param message String protocol message
+     * @return Optional<String>
+     */
+    public static Optional<String> gameOverExtractWinner(String message) {
+        return Optional.ofNullable(split(message)[2]);
+    }
+
+    /**
      * Method that generates String message for server to respond to a client query indicating that it's invalid
      *
      * ERROR
@@ -256,5 +271,23 @@ public class Protocol {
      */
     public static String errorFormat() {
         return ERROR;
+    }
+
+    /**
+     * Method that generates String message indicating that a particular client has disconnected
+     * @param username
+     * @return
+     */
+    public static String clientDisconnectedFormat(String username) {
+        return DISCONNECT + SEPERATOR + username;
+    }
+
+    /**
+     * Method that formats disconnect protocol message and the name of the client that had disconnected
+     * @param message
+     * @return
+     */
+    public static String clientDisconnectedExtract(String message) {
+        return split(message)[1];
     }
 }

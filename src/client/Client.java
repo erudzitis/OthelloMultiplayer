@@ -262,8 +262,6 @@ public class Client {
                 String firstClientUsername = usernames.get(0);
                 String secondClientUsername = usernames.get(1);
 
-                //TODO: Keep track of the new game
-
                 // Keeping track of the new game
                 this.game = new OthelloGame(
                         new HumanPlayer(firstClientUsername, BoardMark.BLACK),
@@ -278,9 +276,20 @@ public class Client {
                 // we update the game state
                 int validatedLocation = Protocol.moveExtract(line);
                 BoardMove validatedMove = this.game.locationToMove(validatedLocation);
-                System.out.println("Client received validated move " + validatedLocation);
-                this.game.doMove(validatedMove);
 
+                this.game.doMove(validatedMove);
+                break;
+            case Protocol.GAMEOVER:
+                // Freeing up the resources
+                this.game = null;
+
+                // Extracting the attributes
+                String reason = Protocol.gameOverExtractReason(line);
+                String winner = Protocol.gameOverExtractWinner(line).orElse(this.username);
+
+                System.out.println("Client gameover " + reason);
+
+                // TODO: Forward the message somewhere
             default:
                 // Unsupported command, 'do nothing'
         }

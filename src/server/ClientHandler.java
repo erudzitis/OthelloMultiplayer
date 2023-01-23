@@ -85,6 +85,9 @@ public class ClientHandler implements Runnable {
                 // Handshake has been performed, we handle other valid 'commands'
                 this.handleIncomingCommand(line);
             }
+
+            // Connection lost, handle it appropriately
+            // terminateConnection();
         } catch (IOException e) {
             //TODO: Read up on what to do in this case
         }
@@ -133,6 +136,24 @@ public class ClientHandler implements Runnable {
     }
 
     /**
+     * Method that states if the current client that the client handler is assigned to is logged into the server
+     * @return true / false
+     */
+    public boolean isClientLoggedIn() {
+        return this.server.getClientHandlers().get(this) != null;
+    }
+
+    /**
+     * Internal method that attempts to terminate client connection
+     */
+    private void terminateConnection() {
+        try {
+            this.clientSocket.close();
+            this.server.clientDisconnected(this);
+        } catch (IOException e) { }
+    }
+
+    /**
      * Internal method that handles all incoming commands from the client
      *
      * @param line String line that we received from the server
@@ -154,15 +175,28 @@ public class ClientHandler implements Runnable {
                     this.server.setNewClient(clientDesiredUsername, this);
                     this.sendMessage(Protocol.loginFormat());
                 }
-
+                break;
             case Protocol.LIST:
+                // Client must be logged in to perform this action
+                if (!isClientLoggedIn()) break;
+
                 // Sends client the list of all logged in user usernames
                 this.sendMessage(Protocol.listFormat(this.server.getUserUsernames()));
                 break;
             case Protocol.QUEUE:
+                // Client must be logged in to perform this action
+                if (!isClientLoggedIn()) break;
+
                 // Client wants to join \ leave the queue (if already placed in the queue)
+                // However, if client is already in a game, he should not be able to be put in queue
+                if (this.server.rooms.containsKey(this)) break;
+
                 this.server.setQueue(this);
+                break;
             case Protocol.MOVE:
+                // Client must be logged in to perform this action
+                if (!isClientLoggedIn()) break;
+
                 // Client wants to attempt to perform a move,
                 // need to forward the client desired move to respective game handler
                 // Check if the client is even in a game
@@ -175,12 +209,12 @@ public class ClientHandler implements Runnable {
                 if (gameRoom.getGameHandler().getGame().getPlayerTurn().getUsername()
                         != this.server.getClientHandlers().get(this)) return;
 
-                System.out.println("Move received in client handler " + line);
-                System.out.println("Move forwarded to game handler " + line);
                 // Writing to the pipe input of the game handler
                 gameRoom.forwardToGameHandler(line);
-
                 break;
+            case Protocol.DISCONNECT:
+                // Client wants to disconnect, closing socket
+                terminateConnection();
             default:
                 // Unsupported command, 'do nothing'
         }

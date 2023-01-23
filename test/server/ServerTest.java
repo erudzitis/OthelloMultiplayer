@@ -140,7 +140,7 @@ class ServerTest {
         clientThree.sendMessage(Protocol.queueFormat());
         Thread.sleep(2000);
 
-        Assertions.assertTrue(server.getRooms().keySet().size() == 1);
+        Assertions.assertTrue(server.getRooms().keySet().size() == 2);
         Assertions.assertTrue(server.getQueue().size() == 1);
     }
 
@@ -162,7 +162,7 @@ class ServerTest {
         Thread.sleep(2000);
 
         // getting reference to the match room
-        GameRoom gameRoom = server.getRooms().get(server.rooms.keySet().toArray()[0]);
+        GameRoom gameRoom = server.getRooms().get(server.getRooms().keySet().toArray()[0]);
 
         // playing game
         client.sendMessage(Protocol.moveFormat(19));
@@ -184,5 +184,30 @@ class ServerTest {
 
         Assertions.assertEquals(BoardMark.WHITE, gameRoom.getGameHandler().getGame().getBoard().getField(20));
         System.out.println(gameRoom.getGameHandler().getGame().getBoard());
+    }
+
+    /**
+     * Tests if client disconnection while being in a game is properly handled
+     */
+    @Test
+    void testServerGameClientDisconnect() throws UnknownHostException, InterruptedException {
+        // connecting
+        client.connect(InetAddress.getLocalHost(), server.getPort());
+        Client clientTwo = new Client(AVAILABLE_USERNAME);
+        clientTwo.connect(InetAddress.getLocalHost(), server.getPort());
+
+        // joining queue
+        Thread.sleep(2000);
+        client.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+        clientTwo.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+
+        Assertions.assertTrue(server.rooms.keySet().size() == 2);
+
+        clientTwo.sendMessage(Protocol.DISCONNECT);
+        Thread.sleep(2000);
+
+        Assertions.assertTrue(server.rooms.keySet().size() == 0);
     }
 }

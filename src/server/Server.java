@@ -3,6 +3,7 @@ package server;
 import client.Client;
 import game.BoardGame;
 import game.players.Player;
+import networking.Protocol;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,9 +14,6 @@ import java.util.stream.Collectors;
 public class Server {
     /*@public invariant (\forall int i; i > 0 && i < queue.size();
         (\exists int j; j > 0 && j < users.size(); queue.get(i).equals(users.get(j)))); @*/
-
-    /*@public invariant (\exists int j, k; j > 0 && k > 0 && j < users.size() && k < users.size();
-        rooms.keySet().contains(users.get(j).getUsername() + users.get(k).getUsername()));*/
 
     /**
      * Stores the servers socket
@@ -34,7 +32,6 @@ public class Server {
 
     /**
      * Stores client handler to board game room pairs
-     * Room name consists of the combination of both player usernames
      */
     protected /*@spec_public; @*/ Map<ClientHandler, GameRoom> rooms = new HashMap<>();
 
@@ -143,6 +140,45 @@ public class Server {
      */
     protected Map<String, ClientHandler> getClientHandlersReverse() {
         return this.clientHandlersReverse;
+    }
+
+    /**
+     * Method that handles the disconnection of a client by informing any other dependant objects
+     * @param clientHandler ClientHandler instance that was assigned to the disconnected client socket
+     */
+    protected void clientDisconnected(ClientHandler clientHandler) {
+        String clientUsername = this.clientHandlers.get(clientHandler);
+
+        // If the client was in a game, inform the game handler
+        GameRoom clientGameRoom = this.rooms.get(clientHandler);
+
+        if (clientGameRoom != null) {
+            // Informing game handler of termination
+            clientGameRoom.forwardToGameHandler(Protocol.clientDisconnectedFormat(clientUsername));
+
+            // Need to wait until message is forwarded back to clients and room cleanup is performed,
+            // there probably might be a better solution?
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) { }
+
+            // Closing the game room
+            clientGameRoom.close();
+        }
+
+        // Removing all other associations
+        this.clientHandlers.remove(clientHandler);
+        this.clientHandlersReverse.remove(clientUsername);
+    }
+
+    /**
+     * Cleans up fields related to client username game rooms
+     * @param clientUsernames String vararg
+     */
+    protected void cleanUpGameRoom(String... clientUsernames) {
+        for (String clientUsername: clientUsernames) {
+            this.rooms.remove(this.clientHandlersReverse.get(clientUsername));
+        }
     }
 
     /**

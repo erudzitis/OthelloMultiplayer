@@ -70,4 +70,14 @@ public class GameRoom {
     public void forwardToGameHandler(String message) {
         this.pipedOutput.println(message);
     }
+
+    /**
+     * Attempts to close all IO's
+     */
+    public void close() {
+        try {
+            this.pipedOutput.close();
+            this.pipedInput.close();
+        } catch (IOException e) { }
+    }
 }
