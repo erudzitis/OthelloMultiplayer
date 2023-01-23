@@ -330,27 +330,45 @@ public class Board {
         return false;
     }
 
+    /**
+     * Internal method used for building the string representation of the board
+     * @param left String left character
+     * @param right String right character
+     * @param middle String middle character
+     * @return String formatted
+     */
+    private String toStringHelper(String left, String right, String middle) {
+        String result = "";
+        result += System.lineSeparator();
+        result += left + middle + right;
+        result += System.lineSeparator();
+
+        return result;
+    }
+
     @Override
     public String toString() {
         String result = "";
 
+        // Top of the board
+        result += toStringHelper("┏━━━", "━━━┓", "━━━┯━━━".repeat(DIMENSION - 1));
+
         // Going over each row
         for (int row = 0; row < DIMENSION; row++) {
             // Going over each row fields
+            result += "┃ ";
             for (int column = 0; column < DIMENSION; column++) {
                 // Getting each field
                 BoardMark storedField = fields[getIndex(row, column)];
 
-                // If it's a new row, we add delimiter at the top and enforce a new line
-                if (column == 0) {
-                    result += System.lineSeparator();
-                    result += "-".repeat(DIMENSION * 2 + 1);
-                    result += System.lineSeparator();
-                }
-
-                // Appending formatted field to the result
-                result += String.format((column == DIMENSION - 1) ? "|%s|" : "|%s", storedField.toString());
+                // Appending formatted field to the result (Some Unicode shenanigans)
+                result += (!storedField.equals(BoardMark.EMPTY) ? "    " : "  ") + storedField;
+                result += ((column == DIMENSION - 1) ? "  ┃" : "  │ ");
             }
+
+            // If it's a new row, we add delimiter at the top and enforce a new line
+            result += row == DIMENSION - 1 ? toStringHelper("┗━━━", "━━━┛", "━━━┷━━━".repeat(DIMENSION - 1))
+                    : toStringHelper("┠───", "───┨", "───┼───".repeat(DIMENSION - 1));
         }
 
         return result;
