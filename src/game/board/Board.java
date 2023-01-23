@@ -58,6 +58,18 @@ public class Board {
     }
 
     /**
+     * Creates deep copy of the board
+     * @return Board copy instance
+     */
+    /*@ensures (\forall int i; i >= 0 && i < fields.length; \result.fields[i] == fields[i]); */
+    public Board deepCopy() {
+        BoardMark[] fieldsCopy = new BoardMark[this.fields.length];
+        System.arraycopy(this.fields, 0, fieldsCopy, 0, this.fields.length);
+
+        return new Board(fieldsCopy);
+    }
+
+    /**
      * Method that converts the row, column pair into an index for 1D array
      * @param row
      * @param column

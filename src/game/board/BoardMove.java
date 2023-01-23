@@ -1,25 +1,21 @@
 package game.board;
 
-import src.game.players.Player;
+import game.players.Player;
+
+import java.util.List;
 
 public class BoardMove {
     private Player player;
-    private /*@spec_public;*/ BoardMark mark;
-    private /*@spec_public;*/ int location;
-
-    /*@public invariant mark.equals(BoardMark.WHITE) || mark.equals(BoardMark.BLACK);
-      @public invariant location >= 0 && location < (Board.DIMENSION * Board.DIMENSION);*/
+    private List<Integer> indexCollection;
 
     /**
      * Constructor that initializes the object
      * @param player Player implementation
-     * @param mark BoardMark enum type
-     * @param location int, index of the location on the board
+     * @param indexCollection List<Integer> collection of row, column, their outflanking pairs and extension point pair
      */
-    public BoardMove(Player player, BoardMark mark, int location) {
+    public BoardMove(Player player, List<Integer> indexCollection) {
         this.player = player;
-        this.mark = mark;
-        this.location = location;
+        this.indexCollection = indexCollection;
     }
 
     /**
@@ -36,8 +32,8 @@ public class BoardMove {
      * @return int, index on the board
      */
     /*@pure; @*/
-    public int getLocation() {
-        return this.location;
+    public List<Integer> getIndexCollection() {
+        return this.indexCollection;
     }
 
     /**
@@ -46,6 +42,30 @@ public class BoardMove {
      */
     /*@pure; @*/
     public BoardMark getMark() {
-        return this.mark;
+        return this.player.getMark();
+    }
+
+    public int getRow() {
+        return this.indexCollection.get(0);
+    }
+
+    public int getColumn() {
+        return this.indexCollection.get(1);
+    }
+
+    public int getSupportRow() {
+        return this.indexCollection.get(2);
+    }
+
+    public int getSupportColumn() {
+        return this.indexCollection.get(3);
+    }
+
+    public int getExtensionRow() {
+        return this.indexCollection.get(4);
+    }
+
+    public int getExtensionColumn() {
+        return this.indexCollection.get(5);
     }
 }

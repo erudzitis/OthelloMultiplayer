@@ -100,7 +100,7 @@ public class ClientHandler implements Runnable {
 
     /**
      * Internal method that (assuming the message is actually a handshake initialization incoming from client),
-     * acknowledges the handshake and updates the clients supported extensions
+     * acknowledges the handshake updates the clients supported extensions
      *
      * @param line
      * @throws HandshakeFailed if the incoming message is not HELLO protocol adherent
@@ -162,6 +162,25 @@ public class ClientHandler implements Runnable {
             case Protocol.QUEUE:
                 // Client wants to join \ leave the queue (if already placed in the queue)
                 this.server.setQueue(this);
+            case Protocol.MOVE:
+                // Client wants to attempt to perform a move,
+                // need to forward the client desired move to respective game handler
+                // Check if the client is even in a game
+                if (!this.server.getRooms().containsKey(this)) return;
+
+                // Getting reference to the game room
+                GameRoom gameRoom = this.server.getRooms().get(this);
+
+                // Check if it even is the clients turn
+                if (gameRoom.getGameHandler().getGame().getPlayerTurn().getUsername()
+                        != this.server.getClientHandlers().get(this)) return;
+
+                System.out.println("Move received in client handler " + line);
+                System.out.println("Move forwarded to game handler " + line);
+                // Writing to the pipe input of the game handler
+                gameRoom.forwardToGameHandler(line);
+
+                break;
             default:
                 // Unsupported command, 'do nothing'
         }

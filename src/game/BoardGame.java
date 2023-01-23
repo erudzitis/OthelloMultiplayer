@@ -42,6 +42,12 @@ public interface BoardGame {
     List<Player> getPlayers();
 
     /**
+     * Method that returns the Player of current turn
+     * @return Player
+     */
+    Player getPlayerTurn();
+
+    /**
      * Method that checks if the provided move is valid.
      * A provided move is valid if its current players / bots turn,
      * the field is valid field on the board and opponents marks can be outflanked.
@@ -50,6 +56,14 @@ public interface BoardGame {
      */
     /*@ pure; @*/
     boolean isValidMove(BoardMove move);
+
+    /**
+     * Method that attempts to convert index location on board to it's corresponding move object.
+     * Assumes that the move is intended to be constructed for the player that has it's turn in the game
+     * @param location int, location index on the board
+     * @return null, if the conversion failed, otherwise BoardMove
+     */
+    BoardMove locationToMove(int location);
 
     /**
      * Method that returns all valid moves that a player / bot could perform in this turn.

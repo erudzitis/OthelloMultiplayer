@@ -1,7 +1,7 @@
 package game.board;
 
 public enum BoardMark {
-    WHITE("●"), BLACK("○"), EMPTY(" ");
+    WHITE("⚪"), BLACK("⚫"), EMPTY(" ");
 
     /**
      * Private String that holds each enums constants value

@@ -33,10 +33,10 @@ public class Server {
     private Map<String, ClientHandler> clientHandlersReverse = new HashMap<>();
 
     /**
-     * Stores room name to board game pairs
+     * Stores client handler to board game room pairs
      * Room name consists of the combination of both player usernames
      */
-    protected /*@spec_public; @*/ Map<String, BoardGame> rooms = new HashMap<>();
+    protected /*@spec_public; @*/ Map<ClientHandler, GameRoom> rooms = new HashMap<>();
 
     /**
      * Stores username to player pairs
@@ -115,13 +115,34 @@ public class Server {
 
     /**
      * Method that returns the list of client usernames that are in waiting queue for a game
+     * @return List<String> of client usernames
      */
     public List<String> getQueue() {
         return this.queue;
     }
 
-    public Map<String, BoardGame> getRooms() {
+    /**
+     * Method that returns the map of ongoing match room names and their associated rooms
+     * @return Map<String, BoardGame>
+     */
+    public Map<ClientHandler, GameRoom> getRooms() {
         return this.rooms;
+    }
+
+    /**
+     * Method that returns the map of assigned client handlers and corresponding client usernames
+     * @return Map<String, ClientHandler>
+     */
+    protected Map<ClientHandler, String> getClientHandlers() {
+        return this.clientHandlers;
+    }
+
+    /**
+     * Method that returns the map of existing client usernames and their assigned client handlers
+     * @return Map<String, ClientHandler>
+     */
+    protected Map<String, ClientHandler> getClientHandlersReverse() {
+        return this.clientHandlersReverse;
     }
 
     /**
@@ -129,7 +150,6 @@ public class Server {
      * @return true / false indicating if the action was successful
      */
     /*@assignable serverSocket; @*/
-    //TODO: Read best and most proper thread and socket termination practices
     public boolean start() {
         // Attempting to initialize server socket
         try {
@@ -165,27 +185,32 @@ public class Server {
     }
 
     /**
-     * Method that broadcasts already formatted message according to the protocol in a specific game room
+     * Method that broadcasts already formatted message according to the protocol to specific clients
+     * @param message String formatted protocol message
+     * @param usernames List<String> of client usernames
      */
-    public void broadCastMessage(String roomName, String message) {
-        // Check if a game associated with the provided room name exists
-        BoardGame roomGame = this.rooms.get(roomName);
-
-        // Room game not found
-        if (roomGame == null) return;
-
-        // Otherwise getting all room player usernames
-        List<String> roomUsernames = roomGame.getPlayers()
-                                    .stream()
-                                    .map(player -> player.getUsername())
-                                    .collect(Collectors.toList());
-
+    /*@requires message != null && usernames.size() > 0;
+      @requires (\forall int i; i >= 0 && i < usernames.size(); users.keySet().contains(usernames.get(i))); */
+    public void broadCastMessage(String message, List<String> usernames) {
         // Going over all usernames
-        for (String username: roomUsernames) {
+        for (String username: usernames) {
             // Getting clients handler and forwarding the message
             ClientHandler clientHandler = this.clientHandlersReverse.get(username);
+
+            // A client handler must exist
+            if (clientHandler == null) return;
+
             clientHandler.sendMessage(message);
         }
+    }
+
+    /**
+     * Method that broadcasts already formatted message according to the protocol to specific clients
+     * @param message String formatted protocol message
+     * @param usernames String vararg
+     */
+    public void broadCastMessage(String message, String... usernames) {
+        broadCastMessage(message, Arrays.asList(usernames));
     }
 
     /**

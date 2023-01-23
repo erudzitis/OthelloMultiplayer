@@ -1,6 +1,8 @@
 package server;
 
 import client.Client;
+import game.board.Board;
+import game.board.BoardMark;
 import networking.Protocol;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -119,5 +121,68 @@ class ServerTest {
         Thread.sleep(2000);
 
         Assertions.assertTrue(server.getRooms().keySet().size() == 1);
+    }
+
+    /**
+     * Tests if the server successfully create a game room for 2 clients and leaves the third client waiting in the queue
+     */
+    @Test
+    void testServerNewGameCreationPerceive() throws UnknownHostException, InterruptedException {
+        client.connect(InetAddress.getLocalHost(), server.getPort());
+        Client clientTwo = new Client(AVAILABLE_USERNAME);
+        clientTwo.connect(InetAddress.getLocalHost(), server.getPort());
+        Client clientThree = new Client("BenchWarmer");
+        clientThree.connect(InetAddress.getLocalHost(), server.getPort());
+
+        Thread.sleep(2000);
+        client.sendMessage(Protocol.queueFormat());
+        clientTwo.sendMessage(Protocol.queueFormat());
+        clientThree.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+
+        Assertions.assertTrue(server.getRooms().keySet().size() == 1);
+        Assertions.assertTrue(server.getQueue().size() == 1);
+    }
+
+    /**
+     * Tests if the playing a game amongst 2 clients is supported by the server
+     */
+    @Test
+    void testServerNewGamePlay() throws UnknownHostException, InterruptedException {
+        // connecting
+        client.connect(InetAddress.getLocalHost(), server.getPort());
+        Client clientTwo = new Client(AVAILABLE_USERNAME);
+        clientTwo.connect(InetAddress.getLocalHost(), server.getPort());
+
+        // joining queue
+        Thread.sleep(2000);
+        client.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+        clientTwo.sendMessage(Protocol.queueFormat());
+        Thread.sleep(2000);
+
+        // getting reference to the match room
+        GameRoom gameRoom = server.getRooms().get(server.rooms.keySet().toArray()[0]);
+
+        // playing game
+        client.sendMessage(Protocol.moveFormat(19));
+        Thread.sleep(2000);
+
+        Assertions.assertEquals(BoardMark.BLACK, gameRoom.getGameHandler().getGame().getBoard().getField(19));
+        System.out.println(gameRoom.getGameHandler().getGame().getBoard());
+
+        // The same client should not be able to perform a move again, the game turn should have been given to opponent
+        client.sendMessage(Protocol.moveFormat(20));
+        Thread.sleep(2000);
+
+        Assertions.assertEquals(BoardMark.EMPTY, gameRoom.getGameHandler().getGame().getBoard().getField(20));
+        System.out.println(gameRoom.getGameHandler().getGame().getBoard());
+
+        // The opponent should be able to perform the move
+        clientTwo.sendMessage(Protocol.moveFormat(20));
+        Thread.sleep(2000);
+
+        Assertions.assertEquals(BoardMark.WHITE, gameRoom.getGameHandler().getGame().getBoard().getField(20));
+        System.out.println(gameRoom.getGameHandler().getGame().getBoard());
     }
 }

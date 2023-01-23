@@ -6,6 +6,7 @@ import game.board.BoardMark;
 import game.players.HumanPlayer;
 import networking.Protocol;
 
+import java.io.PipedReader;
 import java.util.List;
 
 /**
@@ -52,19 +53,22 @@ public class QueueHandler implements Runnable {
                 String firstClientUsername = serverQueue.get(groupStartIndex);
                 String secondClientUsername = serverQueue.get(groupStartIndex + 1);
 
-                // Creating a new match room name, that is composed of both player usernames
-                String roomName = firstClientUsername + secondClientUsername;
+                // Creating a game room for the new game
+                GameRoom gameRoom = new GameRoom(this.server, firstClientUsername, secondClientUsername);
 
-                // Creating a new game
-                BoardGame roomGame = new OthelloGame(
-                        new HumanPlayer(firstClientUsername, BoardMark.BLACK),
-                        new HumanPlayer(secondClientUsername, BoardMark.WHITE));
+                // Getting the client handlers of both clients
+                ClientHandler firstClientHandler = this.server.getClientHandlersReverse().get(firstClientUsername);
+                ClientHandler secondClientHandler = this.server.getClientHandlersReverse().get(secondClientUsername);
 
-                // Keeping track of the game, so game handler thread could access it
-                this.server.rooms.put(roomName, roomGame);
+                // Keeping track of the rooms (used for ease of access, this way client handler will be able to
+                // get back the reference to the pipe to write to for game rooms game handler)
+                this.server.rooms.put(firstClientHandler, gameRoom);
+                this.server.rooms.put(secondClientHandler, gameRoom);
 
                 // Notifying both clients of this newly created game
-                this.server.broadCastMessage(roomName, Protocol.newGameFormat(firstClientUsername, secondClientUsername));
+                this.server.broadCastMessage(Protocol.newGameFormat(firstClientUsername, secondClientUsername),
+                        firstClientUsername,
+                        secondClientUsername);
             }
 
             // Updating the queue, if there were odd amount of clients waiting, we perceive this client,

@@ -2,6 +2,10 @@ package client;
 
 import exceptions.HandshakeFailed;
 import game.BoardGame;
+import game.OthelloGame;
+import game.board.BoardMark;
+import game.board.BoardMove;
+import game.players.HumanPlayer;
 import networking.Protocol;
 
 import java.io.*;
@@ -90,7 +94,7 @@ public class Client {
 
     /**
      * Method that allows to change client username unless they have successfully logged in
-     * @param username
+     * @param desiredUsername String, desired username of client
      */
     /*@requires desiredUsername != null;
       @requires !successfullyLoggedIn;
@@ -180,11 +184,19 @@ public class Client {
     }
 
     /**
-     * Internal method that joins the player queue waiting for a game, if the client is already in the queue,
+     * Method that joins the player queue waiting for a game, if the client is already in the queue,
      * calling this method again will remove him from it
      */
-    private void joinQueue() {
+    public void joinQueue() {
         this.sendMessage(Protocol.queueFormat());
+    }
+
+    /**
+     * Method that forwards clients desired move to the server for verification
+     * @param location int, location index on board
+     */
+    public void attemptMove(int location) {
+        this.sendMessage(Protocol.moveFormat(location));
     }
 
     /**
@@ -245,8 +257,30 @@ public class Client {
                 //TODO: Forward the list of online users somewhere
                 break;
             case Protocol.NEWGAME:
-                //TODO: Initialize client current game and keep track of it
+                // Extracting the usernames of the new game
+                List<String> usernames = Protocol.newGameExtract(line);
+                String firstClientUsername = usernames.get(0);
+                String secondClientUsername = usernames.get(1);
+
+                //TODO: Keep track of the new game
+
+                // Keeping track of the new game
+                this.game = new OthelloGame(
+                        new HumanPlayer(firstClientUsername, BoardMark.BLACK),
+                        new HumanPlayer(secondClientUsername, BoardMark.WHITE));
                 break;
+            case Protocol.ERROR:
+                // The desired move of the client was invalid
+                // TODO: Forward the message somewhere and ask for a turn again
+                break;
+            case Protocol.MOVE:
+                // A move was validated by the server and broadcasted (the move was either attempted by us or our opponent)
+                // we update the game state
+                int validatedLocation = Protocol.moveExtract(line);
+                BoardMove validatedMove = this.game.locationToMove(validatedLocation);
+                System.out.println("Client received validated move " + validatedLocation);
+                this.game.doMove(validatedMove);
+
             default:
                 // Unsupported command, 'do nothing'
         }

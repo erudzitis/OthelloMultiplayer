@@ -200,6 +200,18 @@ public class Protocol {
     }
 
     /**
+     * Method that formats newgame protocol message and extracts all client usernames associated to the new game
+     * @param message
+     * @return
+     */
+    public static List<String> newGameExtract(String message) {
+        String[] messageSplit = split(message);
+        String[] clientUsernames = Arrays.copyOfRange(messageSplit, 1, messageSplit.length);
+
+        return new ArrayList<>(Arrays.asList(clientUsernames));
+    }
+
+    /**
      * Method that generates String message for client, when client wants to indicate the server which move he desires to perform,
      * or for server that forwards the performed move to all clients in a game.
      * If location == 64, it represents a passing move.
@@ -211,6 +223,15 @@ public class Protocol {
      */
     public static String moveFormat(int location) {
         return MOVE + SEPERATOR + location;
+    }
+
+    /**
+     * Method that formats move protocol message and extracts int location of the move
+     * @param message
+     * @return
+     */
+    public static int moveExtract(String message) {
+        return Integer.valueOf(split(message)[1]);
     }
 
     /**
