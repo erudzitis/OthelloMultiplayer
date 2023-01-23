@@ -52,11 +52,21 @@ public class OthelloGame implements BoardGame {
         this.gameTurnAllowedMoves = this.board.getValidMoves(BoardMark.BLACK);
     }
 
+    /**
+     * Support constructor for cloning the game
+     * @param p1 First Player instance
+     * @param p2 Second Player instance
+     * @param board Board instance
+     */
     public OthelloGame(Player p1, Player p2, Board board) {
         this(p1, p2);
         this.board = board;
     }
 
+    /**
+     * Constructor for cloning the game
+     * @param othelloGame Existing OthelloGame instance
+     */
     public OthelloGame(OthelloGame othelloGame) {
         this(new HumanPlayer(othelloGame.players.get(0)),
                 new HumanPlayer(othelloGame.players.get(1)), othelloGame.board.deepCopy());
@@ -91,9 +101,24 @@ public class OthelloGame implements BoardGame {
      * @param player Player implementation
      * @return true / false
      */
+    /*@ensures players.contains(players) ==> \result == true;
+      @pure; */
     @Override
-    public boolean playerConnected(Player player) {
-        return false;
+    public boolean isPlayerConnected(Player player) {
+        return this.players.contains(player);
+    }
+
+    /**
+     * Method that removes player from the list of players
+     *
+     * @param player Player instance
+     */
+    /*@requires player != null;
+      @requires players.contains(players);
+      @modifies players;*/
+    @Override
+    public void removePlayer(Player player) {
+        this.players.remove(player);
     }
 
     /**
@@ -101,6 +126,8 @@ public class OthelloGame implements BoardGame {
      *
      * @return List<Player>, list of players
      */
+    /*@ensures (\forall int i; i >= 0 && i < players.size(); \result.get(i).equals(players.get(i)));
+      @pure; */
     @Override
     public List<Player> getPlayers() {
         return this.players;
@@ -111,11 +138,12 @@ public class OthelloGame implements BoardGame {
      *
      * @return Player
      */
+    /*@ensures players.contains(\result);
+      @pure;*/
     @Override
     public Player getPlayerTurn() {
         return this.players.get(gameTurn);
     }
-
 
     /**
      * Method that checks if the provided move is valid.
@@ -125,6 +153,11 @@ public class OthelloGame implements BoardGame {
      * @param move BoardMove
      * @return true / false
      */
+    /*@requires move != null;
+      @ensures move.getPlayer().equals(getPlayerTurn())
+        && board.isField(board.getIndex(move.getRow(), move.getColumn()))
+            && gameTurnAllowedMoves.contains(move.getIndexCollection()) ==> \result == true;
+      @pure; */
     @Override
     public boolean isValidMove(BoardMove move) {
         return move.getPlayer().equals(this.getPlayerTurn())
@@ -138,6 +171,7 @@ public class OthelloGame implements BoardGame {
      * @param location int, location index on the board
      * @return null, if the conversion failed, otherwise BoardMove
      */
+    /*@requires location >= 0 && location < 64; */
     public BoardMove locationToMove(int location) {
         // Attempt to get the corresponding move index collection
         for (List<Integer> allowedMove: this.gameTurnAllowedMoves) {
@@ -157,6 +191,8 @@ public class OthelloGame implements BoardGame {
      * @param player Player implementation
      * @return List<BoardMove>, list of valid moves
      */
+    /*@requires players != null && players.contains(player);
+      @requires !isGameOver(); */
     @Override
     public List<BoardMove> getValidMoves(Player player) {
         return this.board.getValidMoves(player.getMark()).stream()
@@ -168,6 +204,10 @@ public class OthelloGame implements BoardGame {
      *
      * @param move BoardMove
      */
+    /*@requires move != null && isValidMove(move);
+      @modifies board;
+      @modifies gameTurn;
+      @modifies gameTurnAllowedMoves; */
     @Override
     public void doMove(BoardMove move) {
         // Check if move is valid
@@ -183,7 +223,7 @@ public class OthelloGame implements BoardGame {
                 move.getPlayer().getMark());
 
         // Updating game turn
-        this.gameTurn = (this.gameTurn + 1) % 2;
+        this.gameTurn = (this.gameTurn + 1) % this.players.size();
 
         // Updating valid moves
         this.gameTurnAllowedMoves = this.board.getValidMoves(this.getPlayerTurn().getMark());
@@ -194,6 +234,7 @@ public class OthelloGame implements BoardGame {
      *
      * @return
      */
+    /*@pure; */
     @Override
     public Board getBoard() {
         return this.board;

@@ -27,12 +27,18 @@ public interface BoardGame {
     boolean isWinner(Player player);
 
     /**
-     * Method that checks if a specific player is connected to the particular game / participating
+     * Method that checks if a specific player is connected to the particular game
      * @param player Player implementation
      * @return true / false
      */
     /*@ pure; @*/
-    boolean playerConnected(Player player);
+    boolean isPlayerConnected(Player player);
+
+    /**
+     * Method that removes player from the list of players
+     * @param player Player instance
+     */
+    void removePlayer(Player player);
 
     /**
      * Method that returns all connected players to the particular src.game.
