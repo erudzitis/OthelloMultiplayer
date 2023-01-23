@@ -21,7 +21,7 @@ public interface BoardGame {
      * @param player Player implementation
      * @return true / false
      */
-    /*@ requires playerConnected(player);
+    /*@ requires isPlayerConnected(player);
       @ pure;
       @*/
     boolean isWinner(Player player);
