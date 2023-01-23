@@ -13,6 +13,14 @@ public class HumanPlayer extends Player {
     public HumanPlayer(String username, BoardMark mark) {
         super(username, mark);
     }
+    /**
+     * Constructor used for deep copy purposes
+     * @param player Player original instance
+     */
+    public HumanPlayer(Player player) {
+        super(player);
+    }
+
 
     /**
      * Method that determines the next move (if any) for Player instance.

@@ -84,7 +84,13 @@ public interface BoardGame {
 
     /**
      * Method that returns the board associated to the current game
-     * @return
+     * @return Board
      */
     Board getBoard();
+
+    /**
+     * Method that returns the deep copy of current games state
+     * @return Deep copied BoardGame instance
+     */
+    BoardGame deepCopy();
 }

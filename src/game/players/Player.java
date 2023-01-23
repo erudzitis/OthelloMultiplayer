@@ -14,6 +14,15 @@ public abstract class Player {
     }
 
     /**
+     * Constructor used for deep copy purposes
+     * @param player Player original instance
+     */
+    public Player(Player player) {
+        this.username = player.username;
+        this.mark = player.mark;
+    }
+
+    /**
      * Getter for player username
      * @return String, name of the player
      */

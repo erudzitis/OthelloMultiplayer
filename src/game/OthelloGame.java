@@ -3,9 +3,11 @@ package game;
 import game.board.Board;
 import game.board.BoardMark;
 import game.board.BoardMove;
+import game.players.HumanPlayer;
 import game.players.Player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,11 +45,21 @@ public class OthelloGame implements BoardGame {
       @assignable players;
       @assignable board; */
     public OthelloGame(Player p1, Player p2) {
-        players.add(p1);
-        players.add(p2);
+        this.players.add(p1);
+        this.players.add(p2);
 
         this.board = new Board();
         this.gameTurnAllowedMoves = this.board.getValidMoves(BoardMark.BLACK);
+    }
+
+    public OthelloGame(Player p1, Player p2, Board board) {
+        this(p1, p2);
+        this.board = board;
+    }
+
+    public OthelloGame(OthelloGame othelloGame) {
+        this(new HumanPlayer(othelloGame.players.get(0)),
+                new HumanPlayer(othelloGame.players.get(1)), othelloGame.board.deepCopy());
     }
 
     /**
@@ -185,5 +197,15 @@ public class OthelloGame implements BoardGame {
     @Override
     public Board getBoard() {
         return this.board;
+    }
+
+    /**
+     * Method that returns the deep copy of current games state
+     *
+     * @return Deep copied BoardGame instance
+     */
+    @Override
+    public BoardGame deepCopy() {
+        return new OthelloGame(this);
     }
 }
