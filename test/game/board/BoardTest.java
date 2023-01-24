@@ -20,10 +20,10 @@ class BoardTest {
      */
     @Test
     void testInitialState() {
-        Assertions.assertEquals(board.getField(board.getIndex(4, 3)), BoardMark.BLACK);
-        Assertions.assertEquals(board.getField(board.getIndex(3, 4)), BoardMark.BLACK);
-        Assertions.assertEquals(board.getField(board.getIndex(3, 3)), BoardMark.WHITE);
-        Assertions.assertEquals(board.getField(board.getIndex(4, 4)), BoardMark.WHITE);
+        Assertions.assertEquals(BoardMark.BLACK, board.getField(board.getIndex(4, 3)));
+        Assertions.assertEquals(BoardMark.BLACK, board.getField(board.getIndex(3, 4)));
+        Assertions.assertEquals(BoardMark.WHITE, board.getField(board.getIndex(3, 3)));
+        Assertions.assertEquals(BoardMark.WHITE, board.getField(board.getIndex(4, 4)));
 
         System.out.println(board);
     }
@@ -34,9 +34,9 @@ class BoardTest {
      */
     @Test
     void testBoardMarks() {
-        Assertions.assertEquals(BoardMark.WHITE.getOpposite(), BoardMark.BLACK);
-        Assertions.assertEquals(BoardMark.BLACK.getOpposite(), BoardMark.WHITE);
-        Assertions.assertEquals(BoardMark.EMPTY.getOpposite(), BoardMark.EMPTY);
+        Assertions.assertEquals(BoardMark.BLACK, BoardMark.WHITE.getOpposite());
+        Assertions.assertEquals(BoardMark.WHITE, BoardMark.BLACK.getOpposite());
+        Assertions.assertEquals(BoardMark.EMPTY, BoardMark.EMPTY.getOpposite());
     }
 
     /**
@@ -47,7 +47,7 @@ class BoardTest {
     void testGetValidMoves() {
         // Getting black valid moves
         List<List<Integer>> validMovesBlack = board.getValidMoves(BoardMark.BLACK);
-        Assertions.assertEquals(validMovesBlack.size(), 4);
+        Assertions.assertEquals(4, validMovesBlack.size());
 
         // Setting black move
         List<Integer> blackMove = validMovesBlack.get(0);
@@ -63,6 +63,6 @@ class BoardTest {
 
         // Getting white valid moves
         List<List<Integer>> whiteValidMoves = board.getValidMoves(BoardMark.WHITE);
-        Assertions.assertEquals(whiteValidMoves.size(), 3);
+        Assertions.assertEquals(3, whiteValidMoves.size());
     }
 }

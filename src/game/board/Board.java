@@ -62,6 +62,7 @@ public class Board {
      * @return Board copy instance
      */
     /*@ensures (\forall int i; i >= 0 && i < fields.length; \result.fields[i] == fields[i]); */
+
     public Board deepCopy() {
         BoardMark[] fieldsCopy = new BoardMark[this.fields.length];
         System.arraycopy(this.fields, 0, fieldsCopy, 0, this.fields.length);
@@ -95,6 +96,27 @@ public class Board {
       @ */
     public boolean isField(int index) {
         return index >= 0 && index < (DIMENSION * DIMENSION);
+    }
+
+    /**
+     * Attempts to convert board game Standard Algebraic Notation board game location to integer location
+     * @param algebraicNotation String SAN board location
+     * @return int, converted location on board
+     * @throws AlgebraicNotationConversionFailed if conversion failed
+     */
+    public int convertFromSAN(String algebraicNotation) throws AlgebraicNotationConversionFailed {
+        // First character is letter representing column, second character is number representing row
+        char[] notationChars = algebraicNotation.toCharArray();
+        int column = 65 - notationChars[0];
+        int row = notationChars[1] - 1;
+
+        // ASCII A decimal value is 65, H decimal value is 72, therefore column must be between 0 and 7
+        // Row values range from 1 to 8, converted should be between 0 and 7
+        if (column < 0 || column > 7 || row < 0 || row > 7) {
+            throw new AlgebraicNotationConversionFailed(algebraicNotation);
+        }
+
+        return getIndex(row, column);
     }
 
     /**
@@ -360,29 +382,36 @@ public class Board {
 
     @Override
     public String toString() {
-        String result = "";
-
         // Top of the board
-        result += toStringHelper("┏━━━", "━━━┓", "━━━┯━━━".repeat(DIMENSION - 1));
+        StringBuilder result = new StringBuilder("\u200A\u200A\u200A\u0020\u0020\u0020\u0020\u0020A" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020B" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020C" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020D" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020E" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020F" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020G" +
+                "\u0020\u0020\u0020\u0020\u0020\u0020H");
+
+        result.append(toStringHelper("\u0020\u0020┏━━━", "━━━┓", "━━━┯━━━".repeat(DIMENSION - 1)));
 
         // Going over each row
         for (int row = 0; row < DIMENSION; row++) {
             // Going over each row fields
-            result += "┃ ";
+            result.append(row + 1).append("\u0020┃ ");
             for (int column = 0; column < DIMENSION; column++) {
                 // Getting each field
                 BoardMark storedField = fields[getIndex(row, column)];
 
                 // Appending formatted field to the result (Some Unicode shenanigans)
-                result += (!storedField.equals(BoardMark.EMPTY) ? "    " : "  ") + storedField;
-                result += ((column == DIMENSION - 1) ? "  ┃" : "  │ ");
+                result.append(!storedField.equals(BoardMark.EMPTY) ? "\u200A\u200A\u200A\u200A" : "\u0020\u0020").append(storedField);
+                result.append((column == DIMENSION - 1) ? "  ┃" : "  │ ");
             }
 
             // If it's a new row, we add delimiter at the top and enforce a new line
-            result += row == DIMENSION - 1 ? toStringHelper("┗━━━", "━━━┛", "━━━┷━━━".repeat(DIMENSION - 1))
-                    : toStringHelper("┠───", "───┨", "───┼───".repeat(DIMENSION - 1));
+            result.append(row == DIMENSION - 1 ? toStringHelper("\u0020\u0020┗━━━", "━━━┛", "━━━┷━━━".repeat(DIMENSION - 1))
+                    : toStringHelper("\u0020\u0020┠───", "───┨", "───┼───".repeat(DIMENSION - 1)));
         }
 
-        return result;
+        return result.toString();
     }
 }
