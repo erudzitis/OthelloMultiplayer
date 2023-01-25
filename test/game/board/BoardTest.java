@@ -20,6 +20,9 @@ class BoardTest {
      */
     @Test
     void testInitialState() {
+        Assertions.assertFalse(board.isFull());
+        Assertions.assertEquals(2, board.countMarks(BoardMark.BLACK));
+        Assertions.assertEquals(2, board.countMarks(BoardMark.WHITE));
         Assertions.assertEquals(BoardMark.BLACK, board.getField(board.getIndex(4, 3)));
         Assertions.assertEquals(BoardMark.BLACK, board.getField(board.getIndex(3, 4)));
         Assertions.assertEquals(BoardMark.WHITE, board.getField(board.getIndex(3, 3)));
@@ -37,6 +40,24 @@ class BoardTest {
         Assertions.assertEquals(BoardMark.BLACK, BoardMark.WHITE.getOpposite());
         Assertions.assertEquals(BoardMark.WHITE, BoardMark.BLACK.getOpposite());
         Assertions.assertEquals(BoardMark.EMPTY, BoardMark.EMPTY.getOpposite());
+    }
+
+    /**
+     * Tests if Standard Algebraic Notation conversion yields correct results
+     */
+    @Test
+    void testSANConversion() throws AlgebraicNotationConversionFailed {
+        Assertions.assertEquals(0, board.convertFromSAN("A1"));
+        Assertions.assertEquals(63, board.convertFromSAN("H8"));
+        Assertions.assertEquals(19, board.convertFromSAN("D3"));
+    }
+
+    /**
+     * Tests if the method throws appropriate exception
+     */
+    @Test
+    void testSANInvalidConversion() {
+        Assertions.assertThrows(AlgebraicNotationConversionFailed.class, () -> board.convertFromSAN("M6"));
     }
 
     /**
@@ -64,5 +85,19 @@ class BoardTest {
         // Getting white valid moves
         List<List<Integer>> whiteValidMoves = board.getValidMoves(BoardMark.WHITE);
         Assertions.assertEquals(3, whiteValidMoves.size());
+    }
+
+    /**
+     * Tests if board deep copy is performed correctly and no references are left over (shallow copy)
+     */
+    @Test
+    void testBoardDeepCopy() {
+        Board boardCopy = this.board.deepCopy();
+
+        // Changing the first field in original board
+        this.board.setField(0, BoardMark.BLACK);
+
+        // Check if the changes have not been applied to the copied board
+        Assertions.assertEquals(BoardMark.EMPTY, boardCopy.getField(0));
     }
 }

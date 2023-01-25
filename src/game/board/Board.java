@@ -4,12 +4,12 @@ import java.util.*;
 
 public class Board {
     /**
-     * Holds the dimensions of the board
+     * Holds the row and column dimensions of the board
      */
     public static final int DIMENSION = 8;
 
     /**
-     * 2D Array that holds all direction extension point pairs (row, column) for a board field, respectively
+     * Internal 2D Array that holds all direction extension point pairs (row, column) for a board field, respectively
      * UP, DOWN, LEFT, RIGHT,
      * UP-LEFT, UP-RIGHT, DOWN-LEFT, DOWN-RIGHT
      */
@@ -24,9 +24,15 @@ public class Board {
     private BoardMark[] fields;
 
     /**
-     * Constructor that initializes the board
+     * Constructor that initializes a fresh board with default positions
      */
-    /*@ assignable fields; @*/
+    /*@ensures countMarks(BoardMark.BLACK) == 2;
+      @ensures countMarks(BoardMark.WHITE) == 2;
+      @ensures fields[getIndex(4, 3)].equals(BoardMark.BLACK);
+      @ensures fields[getIndex(3, 4)].equals(BoardMark.BLACK);
+      @ensures fields[getIndex(3, 3)].equals(BoardMark.WHITE);
+      @ensures fields[getIndex(4, 4)].equals(BoardMark.WHITE);
+      @assignable fields; */
     public Board() {
         // Initializing the board fields
         this.fields = new BoardMark[DIMENSION * DIMENSION];
@@ -47,10 +53,6 @@ public class Board {
      * @param populatedFields BoardMark[] array
      */
     /*@ requires populatedFields.length == DIMENSION * DIMENSION;
-      @ requires populatedFields[getIndex(4, 3)].equals(BoardMark.BLACK);
-      @ requires populatedFields[getIndex(3, 4)].equals(BoardMark.BLACK);
-      @ requires populatedFields[getIndex(3, 3)].equals(BoardMark.WHITE);
-      @ requires populatedFields[getIndex(4, 4)].equals(BoardMark.WHITE);
       @ assignable fields;
       @*/
     public Board(BoardMark[] populatedFields) {
@@ -58,11 +60,10 @@ public class Board {
     }
 
     /**
-     * Creates deep copy of the board
+     * Creates a deep copy of the existing boards current state
      * @return Board copy instance
      */
     /*@ensures (\forall int i; i >= 0 && i < fields.length; \result.fields[i] == fields[i]); */
-
     public Board deepCopy() {
         BoardMark[] fieldsCopy = new BoardMark[this.fields.length];
         System.arraycopy(this.fields, 0, fieldsCopy, 0, this.fields.length);
@@ -78,8 +79,7 @@ public class Board {
      */
     /*@ requires row >= 0 && row < DIMENSION;
       @ requires column >= 0 && column < DIMENSION;
-      @ pure;
-      @ */
+      @ pure; */
     public int getIndex(int row, int column) {
         if (!(row >= 0 && row < DIMENSION && column >= 0 && column < DIMENSION)) return -1;
 
@@ -88,6 +88,7 @@ public class Board {
 
     /**
      * Method that indicates whether index is a valid index of a field on the board.
+     *
      * @param index int, index location on the board
      * @return true / false
      */
@@ -99,16 +100,21 @@ public class Board {
     }
 
     /**
-     * Attempts to convert board game Standard Algebraic Notation board game location to integer location
+     * Attempts to convert board game Standard Algebraic Notation board game location to integer location,
+     * case-insensitive (from A1 to H8)
+     *
      * @param algebraicNotation String SAN board location
      * @return int, converted location on board
-     * @throws AlgebraicNotationConversionFailed if conversion failed
+     * @throws AlgebraicNotationConversionFailed if conversion failed, due to out of bounds
      */
+    /*@requires "H8".compareTo(algebraicNotation) >= 0 && "H8".compareTo(algebraicNotation) <= 7;
+      @signals_only AlgebraicNotationConversionFailed;
+      @pure;*/
     public int convertFromSAN(String algebraicNotation) throws AlgebraicNotationConversionFailed {
         // First character is letter representing column, second character is number representing row
         char[] notationChars = algebraicNotation.toCharArray();
-        int column = 65 - notationChars[0];
-        int row = notationChars[1] - 1;
+        int column = Character.toUpperCase(notationChars[0]) - 65;
+        int row = Character.getNumericValue(notationChars[1]) - 1;
 
         // ASCII A decimal value is 65, H decimal value is 72, therefore column must be between 0 and 7
         // Row values range from 1 to 8, converted should be between 0 and 7
@@ -137,10 +143,10 @@ public class Board {
     }
 
     /**
-     * Method that sets specific board mark in specific position, assuming index is valid, position is empty.
+     * Method that sets specific board mark in specific position, assuming index is valid.
      * @param index int, location on the board
      * @param mark BoardMark enum type
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if provided index is not a field on the board
      */
     /*@requires isField(index);
       @signals_only IllegalArgumentException;
@@ -153,7 +159,9 @@ public class Board {
     }
 
     /**
-     * Method that sets the mark position and flips all the fields in between the starting (just set mark) and end mark
+     * Method that sets the mark position and flips all the fields in between the starting (just placed mark),
+     * and end mark that supports it
+     *
      * @param startRow int, row location of new mark
      * @param startCol int, column location of new mark
      * @param endRow int, row location of supporting mark
@@ -221,6 +229,7 @@ public class Board {
     /**
      * Method that returns all extension pairs for particular board position (any of 8 directions),
      * where there is conjoining target (opponent) board mark.
+     *
      * @param row int, row starting location index on board
      * @param column int, column starting location index on board
      * @param targetMark BoardMark enum type of opponent
@@ -263,7 +272,7 @@ public class Board {
      * @param extensionRow int, extension vertically
      * @param extensionColumn int, extension horizontally
      * @param mark BoardMark enum type for who we are searching the support for
-     * @return List<Integer> (row, column) pair or null
+     * @return List<Integer> (row, column) pair or null if no valid supporting mark found
      */
     /*@requires getField(getIndex(row, column)).equals(mark);
       @ensures \result != null;
@@ -276,12 +285,12 @@ public class Board {
         // Checking if we have found the 'our' mark
         if (getField(getIndex(row, column)).equals(mark)) return new ArrayList<>(Arrays.asList(row, column));
 
+        // Check if we are not going out of bounds with our next step
+        if (!isField(getIndex(row + extensionRow, column + extensionColumn))) return null;
+
         // We haven't found outflanking mark, we continue
         // Check if there is no empty space between
         if (isFieldEmpty(getIndex(row + extensionRow, column + extensionColumn))) return null;
-
-        // Check if we are not going out of bounds with our next step
-        if (!isField(getIndex(row + extensionRow, column + extensionColumn))) return null;
 
         // Otherwise, we recursively call the method until we run in either of the conditions
         return extensionLineSupport(row + extensionRow, column + extensionColumn, extensionRow, extensionColumn, mark);
@@ -319,7 +328,7 @@ public class Board {
                 Collection<int[]> extensions = extensionPointSupport(row, column, mark.getOpposite());
 
                 // No surrounding opponent marks found, continuing to the next board field position
-                if (extensions.size() == 0) continue;
+                if (extensions.isEmpty()) continue;
 
                 // We have the extension points, we want to check if there's a supporting board mark placed of our own,
                 // that will lead to opponents board marks to be outflanked and captured
@@ -336,7 +345,7 @@ public class Board {
                             mark);
 
                     // We have found a valid move
-                    if (!Objects.isNull(support)) {
+                    if (support != null) {
                         int supportMarkRow = support.get(0);
                         int supportMarkColumn = support.get(1);
 
@@ -355,13 +364,15 @@ public class Board {
     }
 
     /**
-     * Method that indicates whether a particular board mark type is a winner.
-     * A mark can be a winner,
-     * @param mark BoardMark enum type
-     * @return true / false
+     * Method that counts the amount of particular marks placed on the board
+     * @param mark BoardMark target mark
+     * @return int, count of placed board marks
      */
-    public boolean isWinner(BoardMark mark) {
-        return false;
+    /*@requires mark.equals(BoardMark.WHITE) || mark.equals(BoardMark.BLACK);
+      @ensures \result >= 0 && \result < 64;
+      @pure; */
+    public int countMarks(BoardMark mark) {
+        return (int) Arrays.stream(this.fields).filter(field -> field.equals(mark)).count();
     }
 
     /**
@@ -380,6 +391,10 @@ public class Board {
         return result;
     }
 
+    /**
+     * Method that builds and returns the textual representation of the current boards state
+     * @return String board state representation
+     */
     @Override
     public String toString() {
         // Top of the board

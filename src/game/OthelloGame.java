@@ -7,15 +7,16 @@ import game.players.HumanPlayer;
 import game.players.Player;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Othello's implementation of the board game
+ */
 public class OthelloGame implements BoardGame {
     /*@public invariant gameTurn == 0 || gameTurn == 1; */
 
     /**
-     * Holds all connected players in the game instance
+     * Holds list of all connected player objects in the game instance
      */
     private List<Player> players = new ArrayList<>();
 
@@ -30,12 +31,13 @@ public class OthelloGame implements BoardGame {
     private Board board;
 
     /**
-     * Holds the list of allowed moves of the current game turns board mark
+     * Holds the list of allowed moves of the current game turns board mark, for performance / internal access reasons
      */
     private List<List<Integer>> gameTurnAllowedMoves;
 
     /**
      * Initializes the game
+     *
      * @param p1 First Player instance
      * @param p2 Second Player instance
      */
@@ -54,6 +56,7 @@ public class OthelloGame implements BoardGame {
 
     /**
      * Support constructor for cloning the game
+     *
      * @param p1 First Player instance
      * @param p2 Second Player instance
      * @param board Board instance
@@ -74,25 +77,34 @@ public class OthelloGame implements BoardGame {
 
     /**
      * Method that checks if the particular game is over.
-     * A game can be over if one of the players has disconnected / left, there's a winner or draw.
+     * A game can be over if one of the players has disconnected / left, the board is full,
+     * or no more moves can be made by any of the players.
      *
      * @return true / false indicating whether the game is over
      */
+    /*@pure; */
     @Override
     public boolean isGameOver() {
-        // TODO: Implement a way to check if any of the players have disconnected
-        return false;
+        return this.players.size() != 2 || this.board.isFull()
+                || (this.gameTurnAllowedMoves.isEmpty()
+                && this.board.getValidMoves(this.getPlayerTurn().getMark().getOpposite()).isEmpty());
     }
 
     /**
-     * Method that checks if a specific player in particular game is a winner
+     * Method that checks if a specific player in particular game is a winner. A player can be a winner,
+     * if the game is over and the opponent has disconnected or the player has more marks on the field than the opponent.
      *
      * @param player Player implementation
      * @return true / false
      */
+    /*@requires isGameOver();
+      @requires isPlayerConnected(player);
+      @ensures board.countMarks(player.getMark()) > board.countMarks(player.getMark().getOpposite()) ==> \result == true;
+      @pure; */
     @Override
     public boolean isWinner(Player player) {
-        return false;
+        return isGameOver() && isPlayerConnected(player)
+                && this.board.countMarks(player.getMark()) > this.board.countMarks(player.getMark().getOpposite());
     }
 
     /**
@@ -122,7 +134,7 @@ public class OthelloGame implements BoardGame {
     }
 
     /**
-     * Method that returns all connected players to the particular src.game.
+     * Method that returns all connected players to the particular game
      *
      * @return List<Player>, list of players
      */
@@ -134,7 +146,7 @@ public class OthelloGame implements BoardGame {
     }
 
     /**
-     * Method that returns the Player of current turn
+     * Method that returns the Player of the current turn
      *
      * @return Player
      */
@@ -148,31 +160,36 @@ public class OthelloGame implements BoardGame {
     /**
      * Method that checks if the provided move is valid.
      * A provided move is valid if its current players / bots turn,
-     * the field is valid field on the board and opponents marks can be outflanked.
+     * the field is valid field on the board and opponents marks can be outflanked or the move is a passing move.
      *
      * @param move BoardMove
      * @return true / false
      */
     /*@requires move != null;
+      @ensures move.getPlayer().equals(getPlayerTurn()) && move.isPassing() ==> \result == true;
       @ensures move.getPlayer().equals(getPlayerTurn())
         && board.isField(board.getIndex(move.getRow(), move.getColumn()))
             && gameTurnAllowedMoves.contains(move.getIndexCollection()) ==> \result == true;
       @pure; */
     @Override
     public boolean isValidMove(BoardMove move) {
-        return move.getPlayer().equals(this.getPlayerTurn())
-                && this.board.isField(this.board.getIndex(move.getRow(), move.getColumn()))
-                && this.gameTurnAllowedMoves.contains(move.getIndexCollection());
+        return move.getPlayer().equals(this.getPlayerTurn()) && (move.isPassing()
+                || (this.board.isField(this.board.getIndex(move.getRow(), move.getColumn()))
+                && this.gameTurnAllowedMoves.contains(move.getIndexCollection())));
     }
 
     /**
      * Method that attempts to convert index location on board to it's corresponding move object.
      * Assumes that the move is intended to be constructed for the player that has it's turn in the game
+     *
      * @param location int, location index on the board
      * @return null, if the conversion failed, otherwise BoardMove
      */
     /*@requires location >= 0 && location < 64; */
     public BoardMove locationToMove(int location) {
+        // Check if the move is a passing move
+        if (location == 64) return new BoardMove(this.getPlayerTurn());
+
         // Attempt to get the corresponding move index collection
         for (List<Integer> allowedMove: this.gameTurnAllowedMoves) {
             // Provided move is in the list of current turn allowed moves
@@ -196,11 +213,12 @@ public class OthelloGame implements BoardGame {
     @Override
     public List<BoardMove> getValidMoves(Player player) {
         return this.board.getValidMoves(player.getMark()).stream()
-                .map(collection -> new BoardMove(player, collection)).collect(Collectors.toList());
+                .map(collection -> new BoardMove(player, collection)).toList();
     }
 
     /**
-     * Method that performs a move, respecting that the proposed move is valid
+     * Method that performs a move, respecting that the proposed move is valid.
+     * If the provided move is a passing move, nothing on board gets modified and the turn is given to the opponent
      *
      * @param move BoardMove
      */
@@ -213,14 +231,16 @@ public class OthelloGame implements BoardGame {
         // Check if move is valid
         if (!isValidMove(move)) return;
 
-        // Perform move and flip outflanked enemy marks
-        this.board.flipFields(move.getRow(),
-                move.getColumn(),
-                move.getSupportRow(),
-                move.getSupportColumn(),
-                move.getExtensionRow(),
-                move.getExtensionColumn(),
-                move.getPlayer().getMark());
+        // Perform move if it's not passing and flip outflanked enemy marks
+        if (!move.isPassing()) {
+            this.board.flipFields(move.getRow(),
+                    move.getColumn(),
+                    move.getSupportRow(),
+                    move.getSupportColumn(),
+                    move.getExtensionRow(),
+                    move.getExtensionColumn(),
+                    move.getPlayer().getMark());
+        }
 
         // Updating game turn
         this.gameTurn = (this.gameTurn + 1) % this.players.size();
@@ -232,7 +252,7 @@ public class OthelloGame implements BoardGame {
     /**
      * Method that returns the board associated to the current game
      *
-     * @return
+     * @return Board instance associated to the game
      */
     /*@pure; */
     @Override
