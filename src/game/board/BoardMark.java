@@ -6,11 +6,11 @@ public enum BoardMark {
     /**
      * Private String that holds each enums constants value
      */
-    private String markString;
+    private final String markString;
 
     /**
      * Private constructor for each enum constant
-     * @param markString
+     * @param markString String enum value
      */
     private BoardMark(String markString) {
         this.markString = markString;
@@ -19,7 +19,7 @@ public enum BoardMark {
     /**
      * Holds all values (WHITE, BLACK, EMPTY)
      */
-    public static final BoardMark[] values = values();
+    private static final BoardMark[] values = values();
 
     /**
      * Has to be called on a particular color board mark, either WHITE or BLACK, to get the opposite one.
@@ -37,7 +37,7 @@ public enum BoardMark {
 
     /**
      * Returns the String representation of each enum constant
-     * @return
+     * @return String enum representation
      */
     @Override
     public String toString() {

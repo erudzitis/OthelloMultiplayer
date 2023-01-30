@@ -27,6 +27,12 @@ public interface BoardGame {
     boolean isWinner(Player player);
 
     /**
+     * Method that attempts to retrieve the winner of the game, assuming the game is over
+     * @return null, if it's a draw, Player the winner otherwise
+     */
+    Player getWinner();
+
+    /**
      * Method that checks if a specific player is connected to the particular game
      * @param player Player implementation
      * @return true / false
@@ -58,14 +64,14 @@ public interface BoardGame {
      * A provided move is valid if its current players / bots turn,
      * the field is valid field on the board and opponents marks can be outflanked.
      * @param move BoardMove
-     * @return
+     * @return true / false
      */
     /*@ pure; @*/
     boolean isValidMove(BoardMove move);
 
     /**
      * Method that attempts to convert index location on board to it's corresponding move object.
-     * Assumes that the move is intended to be constructed for the player that has it's turn in the game
+     * Assumes that the move is intended to be constructed for the player that has its turn in the game
      * @param location int, location index on the board
      * @return null, if the conversion failed, otherwise BoardMove
      */

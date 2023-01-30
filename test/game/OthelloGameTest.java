@@ -1,6 +1,7 @@
 package game;
 
 import game.board.AlgebraicNotationConversionFailed;
+import game.board.Board;
 import game.board.BoardMark;
 import game.board.BoardMove;
 import game.players.HumanPlayer;
@@ -37,7 +38,7 @@ class OthelloGameTest {
         Assertions.assertEquals(2, boardGameCopy.getPlayers().size());
 
         // Perform a move on the original game, copy should remain unchanged
-        BoardMove boardMove = this.boardGame.locationToMove(this.boardGame.getBoard().convertFromSAN("D3"));
+        BoardMove boardMove = this.boardGame.locationToMove(Board.convertFromSAN("D3"));
         this.boardGame.doMove(boardMove);
         Assertions.assertTrue(this.boardGame.getBoard().countMarks(BoardMark.BLACK) >
                 boardGameCopy.getBoard().countMarks(BoardMark.BLACK));
@@ -59,7 +60,7 @@ class OthelloGameTest {
     void testPassingMove() throws AlgebraicNotationConversionFailed {
         Assertions.assertTrue(this.boardGame.locationToMove(64).isPassing());
         Assertions.assertFalse(this.boardGame.locationToMove(
-                this.boardGame.getBoard().convertFromSAN("D3")).isPassing());
+                Board.convertFromSAN("D3")).isPassing());
     }
 
     /**

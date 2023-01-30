@@ -47,9 +47,9 @@ class BoardTest {
      */
     @Test
     void testSANConversion() throws AlgebraicNotationConversionFailed {
-        Assertions.assertEquals(0, board.convertFromSAN("A1"));
-        Assertions.assertEquals(63, board.convertFromSAN("H8"));
-        Assertions.assertEquals(19, board.convertFromSAN("D3"));
+        Assertions.assertEquals(0, Board.convertFromSAN("A1"));
+        Assertions.assertEquals(63, Board.convertFromSAN("H8"));
+        Assertions.assertEquals(19, Board.convertFromSAN("D3"));
     }
 
     /**
@@ -57,7 +57,19 @@ class BoardTest {
      */
     @Test
     void testSANInvalidConversion() {
-        Assertions.assertThrows(AlgebraicNotationConversionFailed.class, () -> board.convertFromSAN("M6"));
+        Assertions.assertThrows(AlgebraicNotationConversionFailed.class, () -> Board.convertFromSAN("M6"));
+    }
+
+    /**
+     * Tests if row, column board indexes are correctly converted to SAN
+     */
+    @Test
+    void testToSANConversion() throws AlgebraicNotationConversionFailed {
+        for (List<Integer> indexCollection: this.board.getValidMoves(BoardMark.BLACK)) {
+            int location = Board.getIndex(indexCollection.get(0), indexCollection.get(1));
+            String SAN = Board.convertToSAN(indexCollection.get(0), indexCollection.get(1));
+            Assertions.assertEquals(location, Board.convertFromSAN(SAN));
+        }
     }
 
     /**

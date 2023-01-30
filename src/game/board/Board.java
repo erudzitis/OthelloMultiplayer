@@ -21,7 +21,7 @@ public class Board {
     /**
      * 1D Array that holds all board fields
      */
-    private BoardMark[] fields;
+    private final BoardMark[] fields;
 
     /**
      * Constructor that initializes a fresh board with default positions
@@ -73,14 +73,14 @@ public class Board {
 
     /**
      * Method that converts the row, column pair into an index for 1D array
-     * @param row
-     * @param column
+     * @param row int, board row, from 0 to 7
+     * @param column int, board column, from 0 to 7
      * @return int, converted index, or -1, if out of bounds
      */
     /*@ requires row >= 0 && row < DIMENSION;
       @ requires column >= 0 && column < DIMENSION;
       @ pure; */
-    public int getIndex(int row, int column) {
+    public static int getIndex(int row, int column) {
         if (!(row >= 0 && row < DIMENSION && column >= 0 && column < DIMENSION)) return -1;
 
         return (row * DIMENSION) + column;
@@ -95,7 +95,7 @@ public class Board {
     /*@ ensures index >= 0 && index < DIMENSION * DIMENSION ==> \result == true;
       @ pure;
       @ */
-    public boolean isField(int index) {
+    public static boolean isField(int index) {
         return index >= 0 && index < (DIMENSION * DIMENSION);
     }
 
@@ -110,7 +110,7 @@ public class Board {
     /*@requires "H8".compareTo(algebraicNotation) >= 0 && "H8".compareTo(algebraicNotation) <= 7;
       @signals_only AlgebraicNotationConversionFailed;
       @pure;*/
-    public int convertFromSAN(String algebraicNotation) throws AlgebraicNotationConversionFailed {
+    public static int convertFromSAN(String algebraicNotation) throws AlgebraicNotationConversionFailed {
         // First character is letter representing column, second character is number representing row
         char[] notationChars = algebraicNotation.toCharArray();
         int column = Character.toUpperCase(notationChars[0]) - 65;
@@ -123,6 +123,16 @@ public class Board {
         }
 
         return getIndex(row, column);
+    }
+
+    /**
+     * Converts board game row, column location to Standard Algebraic Notation board game location
+     * @param row int, row location on board
+     * @param column int, column location on board
+     * @return String SAN converted location on board
+     */
+    public static String convertToSAN(int row, int column) {
+        return (char) (column + 65) + String.valueOf(row + 1);
     }
 
     /**
@@ -194,7 +204,7 @@ public class Board {
     }
 
     /**
-     * Method that states whether the provided field index its empty or not
+     * Method that states whether the provided field index it's empty or not
      * @param index int, index location on board
      * @return true / false, false if the field doesn't exist
      */
@@ -300,9 +310,9 @@ public class Board {
      * Method that computes the available valid moves for either provided board mark (white or black).
      * A move is valid if it outflanks the opponent marks in any row direction.
      *
-     * @param mark BoardMark enum type for who to calculate the valid moves
+     * @param mark BoardMark enum type for whom to calculate the valid moves
      * @return List<List<Integer>> for specified BoardMark enum type,
-     * that holds collection of row, column collection (valid move and it's outflank end position),
+     * that holds collection of row, column collection (valid move, and it's outflank end position),
      * for instance (2, 3, 3, 4, -1, -1), where (2, 3) is valid position where to place the mark,
      * but (3, 4) is the position of supporting mark. (-1, -1) is the extension point.
      */

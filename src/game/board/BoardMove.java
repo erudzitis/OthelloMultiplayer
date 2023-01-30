@@ -12,12 +12,12 @@ public class BoardMove {
     /**
      * Holds the player instance associated to the move
      */
-    private Player player;
+    private final Player player;
 
     /**
      * Holds the board index collection pairs (row, column, support row, support column, extension row, extension column)
      */
-    private List<Integer> indexCollection;
+    private final List<Integer> indexCollection;
 
     /**
      * Indicates whether the move is a passing move (player skips the turn)

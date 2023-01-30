@@ -16,9 +16,14 @@ public class OthelloGame implements BoardGame {
     /*@public invariant gameTurn == 0 || gameTurn == 1; */
 
     /**
+     * Holds the index that indicates that the move should be a passing move
+     */
+    public static final int PASSING_MOVE_INDEX = 64;
+
+    /**
      * Holds list of all connected player objects in the game instance
      */
-    private List<Player> players = new ArrayList<>();
+    private final List<Player> players = new ArrayList<>();
 
     /**
      * Holds the index of current players turn
@@ -57,8 +62,8 @@ public class OthelloGame implements BoardGame {
     /**
      * Support constructor for cloning the game
      *
-     * @param p1 First Player instance
-     * @param p2 Second Player instance
+     * @param p1    First Player instance
+     * @param p2    Second Player instance
      * @param board Board instance
      */
     public OthelloGame(Player p1, Player p2, Board board) {
@@ -68,6 +73,7 @@ public class OthelloGame implements BoardGame {
 
     /**
      * Constructor for cloning the game
+     *
      * @param othelloGame Existing OthelloGame instance
      */
     public OthelloGame(OthelloGame othelloGame) {
@@ -103,8 +109,24 @@ public class OthelloGame implements BoardGame {
       @pure; */
     @Override
     public boolean isWinner(Player player) {
-        return isGameOver() && isPlayerConnected(player)
-                && this.board.countMarks(player.getMark()) > this.board.countMarks(player.getMark().getOpposite());
+        return isGameOver() && isPlayerConnected(player) && (this.players.size() == 1
+                || (this.board.countMarks(player.getMark()) > this.board.countMarks(player.getMark().getOpposite())));
+    }
+
+    /**
+     * Method that attempts to retrieve the winner of the game, assuming the game is over
+     *
+     * @return null, if it's a draw, Player the winner otherwise
+     */
+    @Override
+    public Player getWinner() {
+        for (Player player : this.players) {
+            if (this.isWinner(player)) {
+                return player;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -174,13 +196,13 @@ public class OthelloGame implements BoardGame {
     @Override
     public boolean isValidMove(BoardMove move) {
         return move.getPlayer().equals(this.getPlayerTurn()) && (move.isPassing()
-                || (this.board.isField(this.board.getIndex(move.getRow(), move.getColumn()))
+                || (Board.isField(Board.getIndex(move.getRow(), move.getColumn()))
                 && this.gameTurnAllowedMoves.contains(move.getIndexCollection())));
     }
 
     /**
      * Method that attempts to convert index location on board to it's corresponding move object.
-     * Assumes that the move is intended to be constructed for the player that has it's turn in the game
+     * Assumes that the move is intended to be constructed for the player that has its turn in the game
      *
      * @param location int, location index on the board
      * @return null, if the conversion failed, otherwise BoardMove
@@ -188,15 +210,15 @@ public class OthelloGame implements BoardGame {
     /*@requires location >= 0 && location < 64; */
     public BoardMove locationToMove(int location) {
         // Check if the move is a passing move
-        if (location == 64) return new BoardMove(this.getPlayerTurn());
+        if (location == PASSING_MOVE_INDEX) return new BoardMove(this.getPlayerTurn());
 
         // Attempt to get the corresponding move index collection
-        for (List<Integer> allowedMove: this.gameTurnAllowedMoves) {
+        for (List<Integer> allowedMove : this.gameTurnAllowedMoves) {
             // Provided move is in the list of current turn allowed moves
-            if (this.board.getIndex(allowedMove.get(0), allowedMove.get(1)) == location) {
+            if (Board.getIndex(allowedMove.get(0), allowedMove.get(1)) == location) {
                 // We pass the move validation forwards
                 return new BoardMove(this.getPlayerTurn(), allowedMove);
-            };
+            }
         }
 
         return null;
