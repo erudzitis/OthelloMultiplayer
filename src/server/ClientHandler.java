@@ -196,8 +196,9 @@ public class ClientHandler implements Runnable {
         // A user can log in if the provided username is not taken
         String clientDesiredUsername = Protocol.loginExtract(line);
 
-        // Username is taken, or the username is too long, client has to try to log in again
-        if (this.server.isUsernameTaken(clientDesiredUsername)
+        // Username is invalid, taken, or the username is too long, client has to try to log in again
+        if (clientDesiredUsername == null
+                || this.server.isUsernameTaken(clientDesiredUsername)
                 || clientDesiredUsername.length() > Server.MAXIMUM_USERNAME_LENGTH) {
             this.sendMessage(Protocol.alreadyLoggedInFormat());
         } else {
