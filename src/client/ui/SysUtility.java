@@ -23,15 +23,12 @@ public class SysUtility {
     public String readString(String promptText) {
         // User prompt
         System.out.println(promptText);
-        String output = null;
 
         try {
-            output = this.input.readLine();
+            return this.input.readLine();
         } catch (IOException e) {
-            // TODO: Check how to handle this properly
+            return null;
         }
-
-        return output;
     }
 
     /**

@@ -267,8 +267,6 @@ public class GameHandler implements Runnable {
                     case Protocol.MOVE -> this.addToQueue(Protocol.moveExtract(line));
                 }
             }
-        } catch (IOException e) {
-            // TODO: Read how to properly handle this
-        }
+        } catch (IOException ignored) {}
     }
 }

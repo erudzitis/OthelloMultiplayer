@@ -11,6 +11,9 @@ import game.board.AlgebraicNotationConversionFailed;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ClientTUI {
     /**
@@ -33,6 +36,9 @@ public class ClientTUI {
             Map.entry(SKIP, "Skips the game turn while in a game"),
             Map.entry(HINT, "Outputs the list of possible moves in a game")
     );
+
+    // Client instance associated to the TUI
+    private Client client;
 
     /**
      * Internal helper method that displays line separator in the TUI
@@ -102,23 +108,22 @@ public class ClientTUI {
     /**
      * Helper method that makes sure that client successfully connects to a server
      *
-     * @param client Client instance to connect to the server
+     * @param sysUtility SysUtility for retrieving user input
      */
-    public static void connectClient(Client client, SysUtility sysUtility) throws InterruptedException {
+    public void connectClient(SysUtility sysUtility) {
         InetAddress serverAddress = getServerAddress(sysUtility);
         int serverPort = getServerPort(sysUtility);
-        boolean connected = client.connect(serverAddress, serverPort);
-
-        // Waiting for the command to go through
-        // TODO: There might be a better way
-        Thread.sleep(1000);
+        boolean connected = this.client.connect(serverAddress, serverPort);
 
         // If client couldn't connect to the provided server, we ask for address and port again
-        while (!connected) {
-            client.getMessageHandler().incomingMessage(SysoutHandler.ERROR + " Couldn't connect to the server, try again!");
-            serverAddress = getServerAddress(sysUtility);
-            serverPort = getServerPort(sysUtility);
-            connected = client.connect(serverAddress, serverPort);
+        if (!connected) {
+            this.client.getMessageHandler().incomingMessage(SysoutHandler.ERROR + " Couldn't connect to the server!");
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> this.connectClient(sysUtility),
+                    2000, TimeUnit.MILLISECONDS);
+        } else {
+            // Connected successfully, proceed to ensure that log in was a success
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> this.ensureLogin(sysUtility),
+                    2000, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -126,29 +131,34 @@ public class ClientTUI {
      * Helper method that makes sure that client's username was accepted by the server and client successfully logs in,
      * assigns the accepted username in client GameHandler
      *
-     * @param client Client instance to ensure the successful login
+     * @param sysUtility SysUtility for retrieving user input
      */
-    public static void ensureLogin(Client client, SysUtility sysUtility) throws InterruptedException {
-        while (!client.isSuccessfullyLoggedIn()) {
-            // Waiting for the command to go through
-            // TODO: There might be a better way to do it
-            Thread.sleep(1000);
+    public void ensureLogin(SysUtility sysUtility) {
+        // Client is still not logged in
+        if (!this.client.isSuccessfullyLoggedIn()) {
+            this.client.attemptLogin(sysUtility.readString(SysoutHandler.LOCK + " Username taken, try again ➨ "));
 
-            if (client.isSuccessfullyLoggedIn()) break;
+            Executors.newSingleThreadScheduledExecutor().schedule(() -> this.ensureLogin(sysUtility),
+                    2000, TimeUnit.MILLISECONDS);
+        } else {
+            // Logged in successfully, print the manual
+            printManual();
 
-            client.attemptLogin(sysUtility.readString(SysoutHandler.LOCK + " Username taken, try again ➨ "));
+            // Ask for supported commands
+            Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
+                this.handleCommand(sysUtility.readString(SysoutHandler.PROMPT + " Enter command ➨ "));
+            }, 0, 2000, TimeUnit.MILLISECONDS);
         }
     }
 
-    public static void handleCommand(Client client, String command) {
-        MessageHandler messageHandler = client.getMessageHandler();
-        GameHandler gameHandler = client.getGameRoom().getGameHandler();
-
+    public void handleCommand(String command) {
+        MessageHandler messageHandler = this.client.getMessageHandler();
+        GameHandler gameHandler = this.client.getGameRoom().getGameHandler();
         String[] commandSplit = command.split(" ");
 
         switch (commandSplit[0]) {
-            case LIST -> client.queryUserList();
-            case QUEUE -> client.joinQueue();
+            case LIST -> this.client.queryUserList();
+            case QUEUE -> this.client.joinQueue();
             case MOVE -> {
                 try {
                     gameHandler.handleMove(commandSplit.length == 1 ? null : commandSplit[1]);
@@ -156,7 +166,7 @@ public class ClientTUI {
                          AlgebraicNotationConversionFailed e) {
                     messageHandler.incomingMessage(SysoutHandler.ERROR + " " + e.getMessage());
                 } catch (ArrayIndexOutOfBoundsException e) {
-                    client.getMessageHandler().incomingMessage(SysoutHandler.UNKNOWN + " Something went wrong!");
+                    messageHandler.incomingMessage(SysoutHandler.UNKNOWN + " Something went wrong!");
                 }
             }
             case SKIP -> {
@@ -174,37 +184,24 @@ public class ClientTUI {
                 }
             }
             case HELP -> printManual();
-            default -> client.getMessageHandler().incomingMessage(String.format("%s Unknown command '%s'!",
+            default -> messageHandler.incomingMessage(String.format("%s Unknown command '%s'!",
                     SysoutHandler.UNKNOWN, command));
         }
     }
 
-    // TODO: There's a login bug, if invalid server address / port is passed at least once
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         // Initialization
         SysUtility sysUtility = new SysUtility();
+        ClientTUI tui = new ClientTUI();
 
         // Welcome message
         printWelcome();
 
         // Client creation
         Client client = createClient(sysUtility);
+        tui.client = client;
 
-        // Connecting to a server
-        connectClient(client, sysUtility);
-
-        // Verifying that the automatic login process went through, otherwise retrying
-        ensureLogin(client, sysUtility);
-
-        // Printing manual
-        printManual();
-
-        // Asking for supported commands
-        while (true) {
-            handleCommand(client, sysUtility.readString(SysoutHandler.PROMPT + " Enter command ➨ "));
-
-            // Waiting for the command to go through
-            Thread.sleep(1000);
-        }
+        // Connecting to a server and verifying that the automatic login process went through
+        tui.connectClient(sysUtility);
     }
 }

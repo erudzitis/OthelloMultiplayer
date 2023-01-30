@@ -26,6 +26,7 @@ public class GameRoom {
 
     /**
      * Returns the GameHandler instance associated to the GameRoom
+     *
      * @return GameHandler instance
      */
     protected GameHandler getGameHandler() {
@@ -39,9 +40,7 @@ public class GameRoom {
         try {
             this.pipedInput = new PipedReader();
             this.pipedOutput = new PrintWriter(new PipedWriter(this.pipedInput), true);
-        } catch (IOException e) {
-            // TODO: Read how to properly handle
-        }
+        } catch (IOException ignored) {}
 
         this.gameHandler = new GameHandler(client, this.pipedInput);
 
@@ -51,6 +50,7 @@ public class GameRoom {
 
     /**
      * Method that forwards protocol message to the GameHandler instance
+     *
      * @param message String protocol message
      */
     public void forwardToGameHandler(String message) {

@@ -42,24 +42,20 @@ public class ClientHandler implements Runnable {
      * Constructor that initializes each client handler
      *
      * @param clientSocket Socket of the client
+     * @throws IOException if IO communication establishment with the clients Socket was not successful
      */
     /*@requires server != null;
       @requires clientSocket != null;
-      @assignable server;
-      @assignable clientSocket;
-      @assignable clientSocketOutput;*/
-    public ClientHandler(Server server, Socket clientSocket) {
+      @assignable clientSocketOutput;
+      @signals_only IOException; */
+    public ClientHandler(Server server, Socket clientSocket) throws IOException {
         this.server = server;
         this.clientSocket = clientSocket;
 
         // Attempting to initialize wrappers for client IO
         // OutputStreamWriter converts the incoming chars to bytes,
         // buffered wrappers are for convenience / performance reasons
-        try {
-            this.clientSocketOutput = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        } catch (IOException e) {
-            //TODO: Read up on what to do in this case
-        }
+        this.clientSocketOutput = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
     }
 
     /**

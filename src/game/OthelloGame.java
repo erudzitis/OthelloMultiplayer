@@ -49,7 +49,6 @@ public class OthelloGame implements BoardGame {
     /*@requires p1.getMark().equals(BoardMark.BLACK);
       @requires p2.getMark().equals(BoardMark.WHITE);
       @assignable gameTurnAllowedMoves;
-      @assignable players;
       @assignable board; */
     public OthelloGame(Player p1, Player p2) {
         this.players.add(p1);
@@ -148,8 +147,7 @@ public class OthelloGame implements BoardGame {
      * @param player Player instance
      */
     /*@requires player != null;
-      @requires players.contains(players);
-      @modifies players;*/
+      @requires players.contains(players); */
     @Override
     public void removePlayer(Player player) {
         this.players.remove(player);

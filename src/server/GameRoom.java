@@ -30,14 +30,11 @@ public class GameRoom {
 
     /**
      * Initializes the game room, game handler
+     * @throws IOException if IO communication creation with GameHandler that gets assigned fails
      */
-    public GameRoom(Server server, String firstUsername, String secondUsername) {
-        try {
-            this.pipedInput = new PipedReader();
-            this.pipedOutput = new PrintWriter(new PipedWriter(this.pipedInput), true);
-        } catch (IOException e) {
-            // TODO: Read how to properly handle
-        }
+    public GameRoom(Server server, String firstUsername, String secondUsername) throws IOException {
+        this.pipedInput = new PipedReader();
+        this.pipedOutput = new PrintWriter(new PipedWriter(this.pipedInput), true);
 
         this.gameHandler = new GameHandler(server,
                 this,
@@ -52,6 +49,7 @@ public class GameRoom {
 
     /**
      * Getter for GameHandler instance
+     *
      * @return GameHandler attached to this GameRoom
      */
     public GameHandler getGameHandler() {
@@ -60,6 +58,7 @@ public class GameRoom {
 
     /**
      * Method that forwards protocol message to the GameHandler instance
+     *
      * @param message String protocol message to be forwarded
      */
     public void forwardToGameHandler(String message) {
@@ -73,6 +72,7 @@ public class GameRoom {
         try {
             this.pipedOutput.close();
             this.pipedInput.close();
-        } catch (IOException e) { }
+        } catch (IOException e) {
+        }
     }
 }

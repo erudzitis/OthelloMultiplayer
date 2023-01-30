@@ -30,7 +30,7 @@ public class Client {
     /**
      * Holds and handles the current ongoing game that the client is playing (if any)
      */
-    private final GameRoom gameRoom = new GameRoom(this);
+    private final GameRoom gameRoom;
 
     /**
      * Holds the desired username of the client
@@ -74,6 +74,7 @@ public class Client {
     public Client(String username) {
         this.username = username;
         this.messageHandler = new SysoutHandler();
+        this.gameRoom = new GameRoom(this);
     }
 
     /**

@@ -133,7 +133,8 @@ public class GameHandler implements Runnable {
                 handleIncomingCommand(line);
             }
         } catch (IOException e) {
-            // TODO: Read on how to properly handle this exception
+            // Cleaning up the room
+            this.performCleanup(this.game.getPlayers().stream().map(Player::getUsername).toList());
         }
     }
 

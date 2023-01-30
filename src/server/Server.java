@@ -1,6 +1,5 @@
 package server;
 
-import game.players.Player;
 import networking.Protocol;
 
 import java.io.IOException;
@@ -33,9 +32,9 @@ public class Server {
     protected final /*@spec_public; @*/ Map<ClientHandler, GameRoom> rooms = new HashMap<>();
 
     /**
-     * Stores username to player pairs
+     * Stores connected client usernames
      */
-    private final /*@spec_public; @*/ Map<String, Player> users = new HashMap<>();
+    private final /*@spec_public; @*/ List<String> users = new ArrayList<>();
 
     /**
      * Stores the list of all player usernames that are in the queue
@@ -58,13 +57,13 @@ public class Server {
     protected static final int MAXIMUM_USERNAME_LENGTH = 30;
 
     /**
-     * Method that returns the set of all connected user usernames on the server
+     * Method that returns the list of all connected user usernames on the server
      *
      * @return Set<String> of connected client usernames
      */
     /*@pure; @*/
-    public Set<String> getUserUsernames() {
-        return this.users.keySet();
+    public List<String> getUserUsernames() {
+        return this.users;
     }
 
     /**
@@ -75,7 +74,7 @@ public class Server {
      */
     /*@pure; @*/
     public boolean isUsernameTaken(String username) {
-        return this.users.containsKey(username);
+        return this.users.contains(username);
     }
 
     /**
@@ -88,7 +87,7 @@ public class Server {
         synchronized (this.users) {
             this.clientHandlers.put(clientHandler, username);
             this.clientHandlersReverse.put(username, clientHandler);
-            this.users.put(username, null); // TODO: Consider the keeping track of users implementation
+            this.users.add(username);
         }
     }
 
@@ -209,6 +208,21 @@ public class Server {
     }
 
     /**
+     * Internal method that attempts to accept client and initialize a client handler for it
+     * @param clientSocket Socket of the client that wants to connect to the server
+     */
+    private void acceptClient(Socket clientSocket) {
+        try {
+            // Creating a handler that will handle this connection
+            ClientHandler clientSocketHandler = new ClientHandler(this, clientSocket);
+            // Creating a new separate thread for this client handler
+            new Thread(clientSocketHandler).start();
+        } catch (IOException ignored) {
+            // There was IOException when attempting to create a client handler, we ignore this client connection attempt
+        }
+    }
+
+    /**
      * Method that attempts to start the server on a 'randomly' assigned port
      *
      * @return true / false indicating if the action was successful
@@ -230,11 +244,7 @@ public class Server {
             while (true) {
                 try {
                     // New client connection received
-                    Socket clientSocket = this.serverSocket.accept();
-                    // Creating a handler that will handle this connection
-                    ClientHandler clientSocketHandler = new ClientHandler(this, clientSocket);
-                    // Creating a new separate thread for this client handler
-                    new Thread(clientSocketHandler).start();
+                    this.acceptClient(this.serverSocket.accept());
                 } catch (IOException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -255,7 +265,7 @@ public class Server {
      * @param usernames List<String> of client usernames
      */
     /*@requires message != null && usernames.size() > 0;
-      @requires (\forall int i; i >= 0 && i < usernames.size(); users.keySet().contains(usernames.get(i))); */
+      @requires (\forall int i; i >= 0 && i < usernames.size(); users.contains(usernames.get(i))); */
     public void broadCastMessage(String message, List<String> usernames) {
         // Going over all usernames
         for (String username : usernames) {
@@ -289,6 +299,14 @@ public class Server {
       @pure;*/
     public int getPort() {
         return this.serverSocket.getLocalPort();
+    }
+
+    /**
+     * Method that indicates whether the server instance is running
+     * @return true / false
+     */
+    protected boolean isRunning() {
+        return this.serverSocket != null && !this.serverSocket.isClosed();
     }
 
     /**
