@@ -1,11 +1,8 @@
 package client;
 
+import client.handlers.MessageHandler;
+import client.handlers.SysoutHandler;
 import exceptions.HandshakeFailed;
-import game.BoardGame;
-import game.OthelloGame;
-import game.board.BoardMark;
-import game.board.BoardMove;
-import game.players.HumanPlayer;
 import networking.Protocol;
 
 import java.io.*;
@@ -26,9 +23,14 @@ public class Client {
     private PrintWriter serverSocketOutput;
 
     /**
-     * Holds and keeps track of the current ongoing game that the client is playing (if any)
+     * Holds the assigned message handler that will handle the incoming messages from server
      */
-    private BoardGame game;
+    private MessageHandler messageHandler;
+
+    /**
+     * Holds and handles the current ongoing game that the client is playing (if any)
+     */
+    private final GameRoom gameRoom = new GameRoom(this);
 
     /**
      * Holds the desired username of the client
@@ -49,12 +51,12 @@ public class Client {
     /**
      * Holds the list of all extensions the server supports
      */
-    private List<String> serverSupportedExtensions = new ArrayList<>();
+    private final List<String> serverSupportedExtensions = new ArrayList<>();
 
     /**
      * Stores the list of all supported extensions by the client
      */
-    public static final List<String> SUPPORTED_EXTENSIONS = new ArrayList<>();
+    protected static final List<String> SUPPORTED_EXTENSIONS = new ArrayList<>();
 
     /**
      * Holds the description of the client
@@ -62,14 +64,16 @@ public class Client {
     public static final String CLIENT_DESCRIPTION = "Yellow 7 Client";
 
     /**
-     * Constructor that initializes each client
+     * Constructor that initializes each client and provides a default MessageHandler
      *
      * @param username String, desired client username
      */
     /*@requires username != null;
-      @assignable username;*/
+      @assignable username;
+      @assignable messageHandler; */
     public Client(String username) {
         this.username = username;
+        this.messageHandler = new SysoutHandler();
     }
 
     /**
@@ -85,7 +89,7 @@ public class Client {
     /**
      * States whether the client has successfully logged in to the server
      *
-     * @return
+     * @return true / false
      */
     /*@ensures socket != null && successfullyLoggedIn ==> \result == true; @*/
     public boolean isSuccessfullyLoggedIn() {
@@ -94,11 +98,12 @@ public class Client {
 
     /**
      * Method that allows to change client username unless they have successfully logged in
+     *
      * @param desiredUsername String, desired username of client
      */
     /*@requires desiredUsername != null;
       @requires !successfullyLoggedIn;
-      @assignable username;*/
+      @assignable username; @*/
     public void setUsername(String desiredUsername) {
         if (this.isSuccessfullyLoggedIn()) return;
 
@@ -107,11 +112,30 @@ public class Client {
 
     /**
      * Method that returns the username of the client
-     * @return
+     *
+     * @return String client username
      */
     /*@pure; @*/
     public String getUsername() {
         return this.username;
+    }
+
+    /**
+     * Method that returns the message handler attached to the client
+     *
+     * @return MessageHandler instance
+     */
+    protected MessageHandler getMessageHandler() {
+        return this.messageHandler;
+    }
+
+    /**
+     * Method that returns the GameRoom attached to the client
+     *
+     * @return GameRoom instance
+     */
+    protected GameRoom getGameRoom() {
+        return this.gameRoom;
     }
 
     /**
@@ -145,7 +169,7 @@ public class Client {
                 while ((line = socketInputReader.readLine()) != null) {
                     // Attempting to finalize the handshake
                     try {
-                        // Attempting to automatically login with the desired username after having established a handshake
+                        // Attempting to automatically log in with the desired username after having established a handshake
                         // It's possible that server will deny our username, therefore we will need to handle that case
                         this.handleIncomingHandshake(line);
                     } catch (HandshakeFailed e) {
@@ -157,8 +181,10 @@ public class Client {
                     // Handling all incoming commands
                     handleIncomingCommand(line);
                 }
+
+                this.close();
             } catch (IOException e) {
-                //TODO: Read up on what to do in this case
+                this.close();
             }
         }).start();
 
@@ -166,7 +192,16 @@ public class Client {
     }
 
     /**
-     * Internal method that attempts to login into the server
+     * Internal method that closes the client connection
+     */
+    private void close() {
+        try {
+            this.socket.close();
+        } catch (IOException ignored) {}
+    }
+
+    /**
+     * Internal method that attempts to log in into the server
      */
     /*@requires !successfullyLoggedIn; @*/
     private void attemptLogin() {
@@ -174,6 +209,16 @@ public class Client {
         if (this.isSuccessfullyLoggedIn()) return;
 
         this.sendMessage(Protocol.loginFormat(this.username));
+    }
+
+    /**
+     * Method that re-assigns the client username and attempts to log in again, if not already logged in
+     *
+     * @param newUsername String new desired username
+     */
+    public void attemptLogin(String newUsername) {
+        this.username = newUsername;
+        this.attemptLogin();
     }
 
     /**
@@ -193,10 +238,18 @@ public class Client {
 
     /**
      * Method that forwards clients desired move to the server for verification
+     *
      * @param location int, location index on board
      */
     public void attemptMove(int location) {
         this.sendMessage(Protocol.moveFormat(location));
+    }
+
+    /**
+     * Method that inquiries the server about the list of connected client usernames
+     */
+    public void queryUserList() {
+        this.sendMessage(Protocol.listFormat());
     }
 
     /**
@@ -208,7 +261,7 @@ public class Client {
      */
     /*@requires line != null;
       @requires !handshakeEstablished;
-      @assignable serverSupportedExtensions;
+      @modifies serverSupportedExtensions;
       @assignable handshakeEstablished;
       @signals_only HandshakeFailed; */
     private void handleIncomingHandshake(String line) throws HandshakeFailed {
@@ -223,14 +276,12 @@ public class Client {
         if (supportedExtensions == null) throw new HandshakeFailed();
 
         // Appending all extensions that server supports (if any)
-        for (String extension : supportedExtensions) {
-            this.serverSupportedExtensions.add(extension);
-        }
+        this.serverSupportedExtensions.addAll(supportedExtensions);
 
         // Updating state
         this.handshakeEstablished = true;
 
-        // Automatically attempting to login
+        // Automatically attempting to log in
         this.attemptLogin();
     }
 
@@ -244,56 +295,22 @@ public class Client {
         String command = Protocol.commandExtract(line);
 
         switch (command) {
-            case Protocol.LOGIN:
-                // We have received indication from the server that login was successful
+            // We have received indication from the server that login was successful
+            case Protocol.LOGIN -> {
                 this.successfullyLoggedIn = true;
-                break;
-            case Protocol.ALREADYLOGGEDIN:
-                // A user with the username that we provided is already logged in
+                this.messageHandler.incomingMessage(SysoutHandler.SUCCESS + " Successfully logged in!");
+            }
+            case Protocol.ALREADY_LOGGED_IN -> {
                 this.successfullyLoggedIn = false;
-                //TODO: Implement a way to ask user again for a new username and attempt to login
-                break;
-            case Protocol.LIST:
-                //TODO: Forward the list of online users somewhere
-                break;
-            case Protocol.NEWGAME:
-                // Extracting the usernames of the new game
-                List<String> usernames = Protocol.newGameExtract(line);
-                String firstClientUsername = usernames.get(0);
-                String secondClientUsername = usernames.get(1);
-
-                // Keeping track of the new game
-                this.game = new OthelloGame(
-                        new HumanPlayer(firstClientUsername, BoardMark.BLACK),
-                        new HumanPlayer(secondClientUsername, BoardMark.WHITE));
-                break;
-            case Protocol.ERROR:
-                // The desired move of the client was invalid
-                // TODO: Forward the message somewhere and ask for a turn again
-                break;
-            case Protocol.MOVE:
-                // A move was validated by the server and broadcasted (the move was either attempted by us or our opponent)
-                // we update the game state
-                int validatedLocation = Protocol.moveExtract(line);
-                BoardMove validatedMove = this.game.locationToMove(validatedLocation);
-
-                this.game.doMove(validatedMove);
-                break;
-            case Protocol.GAMEOVER:
-                // Freeing up the resources
-                this.game = null;
-
-                // Extracting the attributes
-                String reason = Protocol.gameOverExtractReason(line);
-                String winner = Protocol.gameOverExtractWinner(line).orElse(this.username);
-
-                System.out.println("Client gameover " + reason);
-
-                // TODO: Forward the message somewhere
-            default:
-                // Unsupported command, 'do nothing'
+                this.messageHandler.incomingMessage(SysoutHandler.ERROR + " A user with the provided username already exists!");
+            }
+            case Protocol.LIST -> this.messageHandler.incomingMessage(SysoutHandler.INFO + " Online users: " + Protocol.listExtract(line));
+            case Protocol.ERROR -> this.messageHandler.incomingMessage(SysoutHandler.ERROR + " Provided move is invalid!");
+            // All game related things are forwarded to the GameHandler
+            case Protocol.NEWGAME, Protocol.MOVE, Protocol.GAMEOVER -> this.gameRoom.forwardToGameHandler(line);
         }
     }
+
 
     /**
      * Method that sends already protocol formatted message to the server socket output
