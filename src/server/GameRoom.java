@@ -1,6 +1,5 @@
 package server;
 
-import game.BoardGame;
 import game.OthelloGame;
 import game.board.BoardMark;
 import game.players.HumanPlayer;
@@ -17,12 +16,7 @@ public class GameRoom {
     /**
      * Holds reference back to the game handler of the particular room
      */
-    private GameHandler gameHandler;
-
-    /**
-     * Holds the name of the room that is associated to the object
-     */
-    private String roomName;
+    private final GameHandler gameHandler;
 
     /**
      * Input for game handler that is going to be reading dispatched messages from the client handler
@@ -46,6 +40,7 @@ public class GameRoom {
         }
 
         this.gameHandler = new GameHandler(server,
+                this,
                 new OthelloGame(
                         new HumanPlayer(firstUsername, BoardMark.BLACK),
                         new HumanPlayer(secondUsername, BoardMark.WHITE)),
@@ -57,7 +52,7 @@ public class GameRoom {
 
     /**
      * Getter for GameHandler instance
-     * @return
+     * @return GameHandler attached to this GameRoom
      */
     public GameHandler getGameHandler() {
         return this.gameHandler;
@@ -65,7 +60,7 @@ public class GameRoom {
 
     /**
      * Method that forwards protocol message to the GameHandler instance
-     * @param message
+     * @param message String protocol message to be forwarded
      */
     public void forwardToGameHandler(String message) {
         this.pipedOutput.println(message);

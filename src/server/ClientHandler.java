@@ -15,7 +15,7 @@ public class ClientHandler implements Runnable {
     /**
      * Holds the socket of the assigned client
      */
-    private /*@spec_public; @*/ Socket clientSocket;
+    private final /*@spec_public; @*/ Socket clientSocket;
 
     /**
      * Holds the output of the client socket
@@ -25,7 +25,7 @@ public class ClientHandler implements Runnable {
     /**
      * Holds the reference back to the server
      */
-    private /*@spec_public; @*/ Server server;
+    private final /*@spec_public; @*/ Server server;
 
     /**
      * Indicates whether the initial handshake between the client and server has been established
@@ -36,12 +36,12 @@ public class ClientHandler implements Runnable {
     /**
      * Holds the list of all extensions the client supports
      */
-    private List<String> clientSupportedExtensions = new ArrayList<>();
+    private final List<String> clientSupportedExtensions = new ArrayList<>();
 
     /**
      * Constructor that initializes each client handler
      *
-     * @param clientSocket
+     * @param clientSocket Socket of the client
      */
     /*@requires server != null;
       @requires clientSocket != null;
@@ -87,9 +87,9 @@ public class ClientHandler implements Runnable {
             }
 
             // Connection lost, handle it appropriately
-            // terminateConnection();
+            this.terminateConnection();
         } catch (IOException e) {
-            //TODO: Read up on what to do in this case
+            this.terminateConnection();
         }
     }
 
@@ -105,7 +105,7 @@ public class ClientHandler implements Runnable {
      * Internal method that (assuming the message is actually a handshake initialization incoming from client),
      * acknowledges the handshake updates the clients supported extensions
      *
-     * @param line
+     * @param line String protocol message read from input
      * @throws HandshakeFailed if the incoming message is not HELLO protocol adherent
      */
     /*@requires line != null;
@@ -123,9 +123,7 @@ public class ClientHandler implements Runnable {
         if (supportedExtensions == null) throw new HandshakeFailed();
 
         // Appending all extensions that client supports (if any)
-        for (String extension: supportedExtensions) {
-            this.clientSupportedExtensions.add(extension);
-        }
+        this.clientSupportedExtensions.addAll(supportedExtensions);
 
         // Sending back the handshake acknowledgment from the server,
         // providing all the extensions that the server supports
@@ -150,7 +148,7 @@ public class ClientHandler implements Runnable {
         try {
             this.clientSocket.close();
             this.server.clientDisconnected(this);
-        } catch (IOException e) { }
+        } catch (IOException ignored) {}
     }
 
     /**
@@ -162,62 +160,72 @@ public class ClientHandler implements Runnable {
     private void handleIncomingCommand(String line) {
         String command = Protocol.commandExtract(line);
 
+        // Fall-through is not needed, using enhanced switch statement
         switch (command) {
-            case Protocol.LOGIN:
-                // A user can login if the provided username is not taken
-                String clientDesiredUsername = Protocol.loginExtract(line);
-
-                // Username is taken, client has to try to login again
-                if (this.server.isUsernameTaken(clientDesiredUsername)) {
-                    this.sendMessage(Protocol.alreadyLoggedInFormat());
-                } else {
-                    // Client login accepted
-                    this.server.setNewClient(clientDesiredUsername, this);
-                    this.sendMessage(Protocol.loginFormat());
-                }
-                break;
-            case Protocol.LIST:
+            case Protocol.LOGIN -> this.handleLoginCommand(line);
+            case Protocol.LIST -> {
                 // Client must be logged in to perform this action
                 if (!isClientLoggedIn()) break;
 
-                // Sends client the list of all logged in user usernames
+                // Sends client the list of all logged-in user usernames
                 this.sendMessage(Protocol.listFormat(this.server.getUserUsernames()));
-                break;
-            case Protocol.QUEUE:
+            }
+            case Protocol.QUEUE -> {
                 // Client must be logged in to perform this action
                 if (!isClientLoggedIn()) break;
 
                 // Client wants to join \ leave the queue (if already placed in the queue)
                 // However, if client is already in a game, he should not be able to be put in queue
-                if (this.server.rooms.containsKey(this)) break;
-
                 this.server.setQueue(this);
-                break;
-            case Protocol.MOVE:
+            }
+            case Protocol.MOVE -> {
                 // Client must be logged in to perform this action
                 if (!isClientLoggedIn()) break;
-
-                // Client wants to attempt to perform a move,
-                // need to forward the client desired move to respective game handler
-                // Check if the client is even in a game
-                if (!this.server.getRooms().containsKey(this)) return;
-
-                // Getting reference to the game room
-                GameRoom gameRoom = this.server.getRooms().get(this);
-
-                // Check if it even is the clients turn
-                if (gameRoom.getGameHandler().getGame().getPlayerTurn().getUsername()
-                        != this.server.getClientHandlers().get(this)) return;
-
-                // Writing to the pipe input of the game handler
-                gameRoom.forwardToGameHandler(line);
-                break;
-            case Protocol.DISCONNECT:
-                // Client wants to disconnect, closing socket
-                terminateConnection();
-            default:
-                // Unsupported command, 'do nothing'
+                this.handleMoveCommand(line);
+            }
+            // Client wants to disconnect, closing socket
+            case Protocol.DISCONNECT -> this.terminateConnection();
         }
+    }
+
+    /**
+     * Internal method that handles the login command issued by the client
+     * @param line String protocol message
+     */
+    private void handleLoginCommand(String line) {
+        // A user can log in if the provided username is not taken
+        String clientDesiredUsername = Protocol.loginExtract(line);
+
+        // Username is taken, or the username is too long, client has to try to log in again
+        if (this.server.isUsernameTaken(clientDesiredUsername)
+                || clientDesiredUsername.length() > Server.MAXIMUM_USERNAME_LENGTH) {
+            this.sendMessage(Protocol.alreadyLoggedInFormat());
+        } else {
+            // Client login accepted
+            this.server.setNewClient(clientDesiredUsername, this);
+            this.sendMessage(Protocol.loginFormat());
+        }
+    }
+
+    /**
+     * Internal method that handles the move command issued by the client
+     * @param line String protocol message
+     */
+    private void handleMoveCommand(String line) {
+        // Client wants to attempt to perform a move,
+        // need to forward the client desired move to respective game handler
+        // Check if the client is even in a game
+        if (!this.server.getRooms().containsKey(this)) return;
+
+        // Getting reference to the game room
+        GameRoom gameRoom = this.server.getRooms().get(this);
+
+        // Check if it even is the clients turn
+        if (!gameRoom.getGameHandler().getGame().getPlayerTurn().getUsername()
+                .equals(this.server.getClientHandlers().get(this))) return;
+
+        // Writing to the pipe input of the game handler
+        gameRoom.forwardToGameHandler(line);
     }
 
     /**

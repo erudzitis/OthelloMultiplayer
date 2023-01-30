@@ -1,12 +1,7 @@
 package server;
 
-import game.BoardGame;
-import game.OthelloGame;
-import game.board.BoardMark;
-import game.players.HumanPlayer;
 import networking.Protocol;
 
-import java.io.PipedReader;
 import java.util.List;
 
 /**
@@ -16,11 +11,11 @@ public class QueueHandler implements Runnable {
     /**
      * Holds the reference to the server
      */
-    private Server server;
+    private final Server server;
 
     /**
      * Initializes server reference
-     * @param server
+     * @param server Server instance
      */
     public QueueHandler(Server server) {
         this.server = server;
@@ -35,17 +30,17 @@ public class QueueHandler implements Runnable {
         List<String> serverQueue = this.server.getQueue();
 
         synchronized (serverQueue) {
-            // A match room can be created only if atleast 2 players are in the queue,
+            // A match room can be created only if at least 2 players are in the queue,
             // putting the thread to a sleeping state and awaiting being notified
             while (serverQueue.size() < 2) {
                 try {
                     serverQueue.wait();
                 } catch (InterruptedException e) {
-                    // TODO: Handle the exception
+                    Thread.currentThread().interrupt();
                 }
             }
 
-            // There are atleast 2 clients, creating match rooms for all 2 player pairs
+            // There are at least 2 clients, creating match rooms for all 2 player pairs
             for (int groupStartIndex = 0; groupStartIndex < serverQueue.size(); groupStartIndex += 2) {
                 // It's possible that the amount of clients in the queue is odd (for example, 3 clients)
                 if (groupStartIndex + 1 >= serverQueue.size()) continue;
@@ -73,10 +68,11 @@ public class QueueHandler implements Runnable {
 
             // Updating the queue, if there were odd amount of clients waiting, we perceive this client,
             // otherwise we just make the queue empty
+            this.server.queue.clear();
+
+            // TODO: Implement synchronized internal setter
             if (serverQueue.size() % 2 > 0) {
-                this.server.queue = serverQueue.subList(serverQueue.size() - 1, serverQueue.size());
-            } else {
-                this.server.queue.clear();
+                this.server.queue.addAll(serverQueue.subList(serverQueue.size() - 1, serverQueue.size()));
             }
         }
     }
