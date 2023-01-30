@@ -28,7 +28,7 @@ public class SysoutHandler implements MessageHandler {
     private void playSoundEffect(String name) {
         new Thread(() -> {
             try {
-                // Opening the stream to our sound effect
+                // Opening the handle and stream to our sound effect
                 File soundEffect = new File(SOUND_PATH + name);
                 AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundEffect);
 
@@ -63,7 +63,7 @@ public class SysoutHandler implements MessageHandler {
         } else if (message.contains(GAME)) {
             this.playSoundEffect("game.wav");
         } else if (message.contains(FINISH)) {
-            if (message.contains("has won")) {
+            if (message.contains("lost")) {
                 this.playSoundEffect("lose.wav");
             } else {
                 this.playSoundEffect("winner.wav");
