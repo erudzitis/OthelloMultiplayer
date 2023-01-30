@@ -1,6 +1,7 @@
 package client;
 
 import client.exceptions.GameNotFoundException;
+import client.handlers.SysoutHandler;
 import game.OthelloGame;
 
 import java.util.Queue;
@@ -31,7 +32,7 @@ public class LocationHandler implements Runnable {
             this.gameHandler.getClient().getMessageHandler().incomingMessage(this.gameHandler.getGame().getBoard().toString());
 
             if (location == OthelloGame.PASSING_MOVE_INDEX) {
-                this.gameHandler.getClient().getMessageHandler().incomingMessage("\uD83D\uDCA1 A game turn was skipped!");
+                this.gameHandler.getClient().getMessageHandler().incomingMessage(SysoutHandler.INFO + " A game turn was skipped!");
             }
         }
 

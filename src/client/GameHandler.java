@@ -240,6 +240,10 @@ public class GameHandler implements Runnable {
 
                         // Extracting the game over reason
                         String reason = Protocol.gameOverExtractReason(line);
+
+                        // Invalid reason
+                        if (reason == null) break;
+
                         StringBuilder descriptive = new StringBuilder(SysoutHandler.FINISH + " Game over, ");
 
                         if (reason.equals(Protocol.DISCONNECT)) {
