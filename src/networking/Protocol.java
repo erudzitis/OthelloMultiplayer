@@ -104,13 +104,17 @@ public class Protocol {
     }
 
     /**
-     * Method that extracts the provided user username from logic protocol message
+     * Method that attempts to extract the provided user username from logic protocol message
      *
      * @param message String protocol message
-     * @return String, user provided username
+     * @return null, if extraction failed, otherwise String, user provided username
      */
     public static String loginExtract(String message) {
-        return split(message)[1];
+        try {
+            return split(message)[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     /**
@@ -247,10 +251,14 @@ public class Protocol {
     /**
      * Method that extracts the game over reason protocol message
      * @param message String protocol message
-     * @return String reason
+     * @return null, if extraction failed, otherwise String reason
      */
     public static String gameOverExtractReason(String message) {
-        return split(message)[1];
+        try {
+            return split(message)[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     /**
@@ -259,7 +267,12 @@ public class Protocol {
      * @return Optional<String>
      */
     public static Optional<String> gameOverExtractWinner(String message) {
-        return Optional.ofNullable(split(message)[2]);
+        try {
+            return Optional.ofNullable(split(message)[2]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return Optional.empty();
+        }
+
     }
 
     /**
