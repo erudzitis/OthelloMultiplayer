@@ -5,7 +5,6 @@ import java.util.*;
 /**
  * Networking protocol used by the server and client for interchangeable communication.
  * The different arguments of commands are separated by a tilde ("~").
- *
  * <argument> required argument.
  * <argument>^n required argument precisely n times.
  * [argument] optional input or argument.
@@ -15,8 +14,8 @@ import java.util.*;
 public class Protocol {
     public static final String HELLO = "HELLO";
     public static final String LOGIN = "LOGIN";
-    public static final String SEPERATOR = "~";
-    public static final String ALREADYLOGGEDIN = "ALREADYLOGGEDIN";
+    public static final String SEPARATOR = "~";
+    public static final String ALREADY_LOGGED_IN = "ALREADYLOGGEDIN";
     public static final String LIST = "LIST";
     public static final String QUEUE = "QUEUE";
     public static final String NEWGAME = "NEWGAME";
@@ -34,13 +33,13 @@ public class Protocol {
     private Protocol() {}
 
     /**
-     * Method that returns an array of protocol message 'contents'
+     * Internal method that returns an array of protocol message 'contents'
      *
      * @param message String protocol message
      * @return String[] message 'contents'
      */
-    public static String[] split(String message) {
-        return message.split(SEPERATOR);
+    private static String[] split(String message) {
+        return message.split(SEPARATOR);
     }
 
     /**
@@ -54,9 +53,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String for initial message that gets sent from the client after establishing connection,'
+     * Method that generates String for initial message that gets sent from the client after establishing connection,
      * or sent as response from the server.
-     *
      * HELLO~<client description>[~extension]*
      *
      * @param description String, descriptive representation of the server / client
@@ -65,9 +63,9 @@ public class Protocol {
      */
     public static String helloFormat(String description, List<String> extensions) {
         // Formatting the main protocol message part
-        StringBuilder protocolMessageBuilder = new StringBuilder(HELLO + SEPERATOR + description);
+        StringBuilder protocolMessageBuilder = new StringBuilder(HELLO + SEPARATOR + description);
         // Adding all extensions, if any
-        for (String extension: extensions) protocolMessageBuilder.append(SEPERATOR + extension);
+        for (String extension: extensions) protocolMessageBuilder.append(SEPARATOR).append(extension);
 
         return protocolMessageBuilder.toString();
     }
@@ -96,14 +94,13 @@ public class Protocol {
 
     /**
      * Method that generates String message that gets sent from the client in 'login' process when choosing a username.
-     *
      * LOGIN~<username>
      *
      * @param username String, desired username
      * @return String formatted message
      */
     public static String loginFormat(String username) {
-        return LOGIN + SEPERATOR + username;
+        return LOGIN + SEPARATOR + username;
     }
 
     /**
@@ -117,8 +114,7 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for server that gets sent back to client to indicate a successful login
-     *
+     * Method that generates String message for server that gets sent back to client to indicate a successful log in
      * LOGIN
      * .
      * @return String formatted message
@@ -130,19 +126,17 @@ public class Protocol {
     /**
      * Method that generates String message for server that gets sent back to client to indicate
      * that a user with the previously provided username is already logged in.
-     *
      * ALREADYLOGGEDIN
      *
      * @return String formatted message
      */
     public static String alreadyLoggedInFormat() {
-        return ALREADYLOGGEDIN;
+        return ALREADY_LOGGED_IN;
     }
 
     /**
      * Method that generates String message for client that requests a list of clients who are currently logged into the server.
      * Allowed at any point once the client is logged in, including during a game.
-     *
      * LIST
      *
      * @return String formatted message
@@ -154,7 +148,6 @@ public class Protocol {
     /**
      * Method that generates String message for server that responds to LIST command from client.
      * Lists the different usernames that are currently logged into the server, including the requesting client.
-     *
      * LIST[~username]*
      *
      * @param usernames Collection<String> Collection of usernames of people that are connected to the server
@@ -164,9 +157,23 @@ public class Protocol {
         // Formatting the main protocol message part
         StringBuilder protocolMessageBuilder = new StringBuilder(LIST);
         // Adding all usernames
-        for (String username: usernames) protocolMessageBuilder.append(SEPERATOR + username);
+        for (String username: usernames) protocolMessageBuilder.append(SEPARATOR).append(username);
 
         return protocolMessageBuilder.toString();
+    }
+
+    /**
+     * Method that extracts the list of client usernames that are logged in the server from LIST protocol message
+     * @param message String LIST protocol message
+     * @return List<String> of client usernames
+     */
+    public static List<String> listExtract(String message) {
+        String[] messageSplit = split(message);
+
+        // Extracting all client usernames from the split protocol message
+        String[] clientUsernames = Arrays.copyOfRange(messageSplit, 1, messageSplit.length);
+
+        return new ArrayList<>(Arrays.asList(clientUsernames));
     }
 
     /**
@@ -174,7 +181,6 @@ public class Protocol {
      * The server will place the client at the back of the queue of waiting players.
      * When the command is issued a second time, the client is removed from the queue.
      * The server does not send a reply.
-     *
      * QUEUE
      *
      * @return String formatted message
@@ -185,7 +191,6 @@ public class Protocol {
 
     /**
      * Method that generates String message for server that informs all users that were put into a new game.
-     *
      * NEWGAME~<player1 name>~<player2 name>
      *
      * @param username1 String, username of the first player that was placed into the game
@@ -193,55 +198,50 @@ public class Protocol {
      * @return String formatted message
      */
     public static String newGameFormat(String username1, String username2) {
-        return NEWGAME + SEPERATOR + username1 + SEPERATOR + username2;
+        return NEWGAME + SEPARATOR + username1 + SEPARATOR + username2;
     }
 
     /**
-     * Method that formats newgame protocol message and extracts all client usernames associated to the new game
-     * @param message
-     * @return
+     * Method that formats new game protocol message and extracts all client usernames associated to the new game
+     * @param message String protocol message
+     * @return List<String> of client usernames placed into a new game
      */
     public static List<String> newGameExtract(String message) {
-        String[] messageSplit = split(message);
-        String[] clientUsernames = Arrays.copyOfRange(messageSplit, 1, messageSplit.length);
-
-        return new ArrayList<>(Arrays.asList(clientUsernames));
+        return listExtract(message);
     }
 
     /**
      * Method that generates String message for client, when client wants to indicate the server which move he desires to perform,
      * or for server that forwards the performed move to all clients in a game.
      * If location == 64, it represents a passing move.
-     *
      * MOVE~<N>
      *
      * @param location int, location on board
      * @return String formatted message
      */
     public static String moveFormat(int location) {
-        return MOVE + SEPERATOR + location;
+        return MOVE + SEPARATOR + location;
     }
 
     /**
      * Method that formats move protocol message and extracts int location of the move
-     * @param message
-     * @return
+     * @param message String protocol message
+     * @return int, extracted move location
      */
     public static int moveExtract(String message) {
-        return Integer.valueOf(split(message)[1]);
+        return Integer.parseInt(split(message)[1]);
     }
 
     /**
      * Method that generates String message for server to indicate all clients in a game that a game is over.
-     *
      * GAMEOVER~<reason>[~winner]
      *
      * @param reason DISCONNECT or VICTORY or DRAW
-     * @param winner
+     * @param winner null or client username
      * @return String formatted message
      */
     public static String gameOverFormat(String reason, String winner) {
-        return GAMEOVER + SEPERATOR + reason + ((winner == null) ? "" : SEPERATOR + winner);
+        return GAMEOVER + SEPARATOR + reason + ((winner == null) ? "" : SEPARATOR + winner);
     }
 
     /**
@@ -264,7 +264,6 @@ public class Protocol {
 
     /**
      * Method that generates String message for server to respond to a client query indicating that it's invalid
-     *
      * ERROR
      *
      * @return String formatted message
@@ -275,17 +274,17 @@ public class Protocol {
 
     /**
      * Method that generates String message indicating that a particular client has disconnected
-     * @param username
-     * @return
+     * @param username String client username that has disconnected
+     * @return String formatted message
      */
     public static String clientDisconnectedFormat(String username) {
-        return DISCONNECT + SEPERATOR + username;
+        return DISCONNECT + SEPARATOR + username;
     }
 
     /**
      * Method that formats disconnect protocol message and the name of the client that had disconnected
-     * @param message
-     * @return
+     * @param message String protocol message
+     * @return String client username that has disconnected
      */
     public static String clientDisconnectedExtract(String message) {
         return split(message)[1];
