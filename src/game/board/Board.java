@@ -1,5 +1,7 @@
 package game.board;
 
+import game.board.exceptions.AlgebraicNotationConversionFailed;
+
 import java.util.*;
 
 public class Board {
@@ -31,8 +33,7 @@ public class Board {
       @ensures fields[getIndex(4, 3)].equals(BoardMark.BLACK);
       @ensures fields[getIndex(3, 4)].equals(BoardMark.BLACK);
       @ensures fields[getIndex(3, 3)].equals(BoardMark.WHITE);
-      @ensures fields[getIndex(4, 4)].equals(BoardMark.WHITE);
-      @assignable fields; */
+      @ensures fields[getIndex(4, 4)].equals(BoardMark.WHITE); */
     public Board() {
         // Initializing the board fields
         this.fields = new BoardMark[DIMENSION * DIMENSION];
@@ -52,9 +53,7 @@ public class Board {
      * Constructor that is used for cloning the board
      * @param populatedFields BoardMark[] array
      */
-    /*@ requires populatedFields.length == DIMENSION * DIMENSION;
-      @ assignable fields;
-      @*/
+    /*@ requires populatedFields.length == DIMENSION * DIMENSION; */
     public Board(BoardMark[] populatedFields) {
         this.fields = populatedFields;
     }
@@ -159,8 +158,7 @@ public class Board {
      * @throws IllegalArgumentException if provided index is not a field on the board
      */
     /*@requires isField(index);
-      @signals_only IllegalArgumentException;
-      @assignable fields;*/
+      @signals_only IllegalArgumentException; */
     public void setField(int index, BoardMark mark) throws IllegalArgumentException {
         // Checking if the index is valid
         if (!isField(index)) throw new IllegalArgumentException("Field with provided index is not valid!");
@@ -183,8 +181,7 @@ public class Board {
     /*@requires isField(getIndex(startRow, startCol));
       @requires isField(getIndex(endRow, endColumn));
       @requires mark.equals(BoardMark.WHITE) || mark.equals(BoardMark.BLACK);
-      @requires (\exists int j; j > 0 && j < EXTENSION_PAIRS.length; EXTENSION_PAIRS[j][0] == extensionRow && EXTENSION_PAIRS[j][1] == extensionColumn);
-      @assignable fields;*/
+      @requires (\exists int j; j > 0 && j < EXTENSION_PAIRS.length; EXTENSION_PAIRS[j][0] == extensionRow && EXTENSION_PAIRS[j][1] == extensionColumn); */
     public void flipFields(int startRow, int startCol, int endRow, int endColumn, int extensionRow, int extensionColumn, BoardMark mark) {
         // Setting the target field that will complete the outflanking
         setField(getIndex(startRow, startCol), mark);

@@ -1,6 +1,8 @@
-package server;
+package server.handlers;
 
 import networking.Protocol;
+import server.GameRoom;
+import server.Server;
 
 import java.io.IOException;
 import java.util.List;
@@ -65,22 +67,17 @@ public class QueueHandler implements Runnable {
 
                     // Keeping track of the rooms (used for ease of access, this way client handler will be able to
                     // get back the reference to the pipe to write to for game rooms game handler)
-                    this.server.rooms.put(firstClientHandler, gameRoom);
-                    this.server.rooms.put(secondClientHandler, gameRoom);
+                    this.server.setRooms(firstClientHandler, gameRoom);
+                    this.server.setRooms(secondClientHandler, gameRoom);
 
                     // Notifying both clients of this newly created game
                     this.server.broadCastMessage(Protocol.newGameFormat(firstClientUsername, secondClientUsername),
                             firstClientUsername,
                             secondClientUsername);
-                }
 
-                // Updating the queue
-                this.server.queue.clear();
-
-                // if there were odd amount of clients waiting, we perceive this client,
-                // otherwise we just make the queue empty
-                if (serverQueue.size() % 2 > 0) {
-                    this.server.queue.addAll(serverQueue.subList(serverQueue.size() - 1, serverQueue.size()));
+                    // Clearing up space in the queue
+                    this.server.setQueue(firstClientHandler);
+                    this.server.setQueue(secondClientHandler);
                 }
             }
         }

@@ -1,11 +1,11 @@
-package client.handlers;
+package client.operators;
 
-public interface MessageHandler {
+public interface MessageOperator {
     /**
      * Method that consumes incoming messages that should be delivered to the client and displays it accordingly,
      * supports method chaining
      *
      * @param message String incoming message
      */
-    MessageHandler incomingMessage(String message);
+    MessageOperator incomingMessage(String message);
 }

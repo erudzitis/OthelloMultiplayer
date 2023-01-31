@@ -3,7 +3,6 @@ package game;
 import game.board.Board;
 import game.board.BoardMark;
 import game.board.BoardMove;
-import game.players.HumanPlayer;
 import game.players.Player;
 
 import java.util.ArrayList;
@@ -46,8 +45,8 @@ public class OthelloGame implements BoardGame {
      * @param p1 First Player instance
      * @param p2 Second Player instance
      */
-    /*@requires p1.getMark().equals(BoardMark.BLACK);
-      @requires p2.getMark().equals(BoardMark.WHITE);
+    /*@requires p1.mark().equals(BoardMark.BLACK);
+      @requires p2.mark().equals(BoardMark.WHITE);
       @assignable gameTurnAllowedMoves;
       @assignable board; */
     public OthelloGame(Player p1, Player p2) {
@@ -76,8 +75,8 @@ public class OthelloGame implements BoardGame {
      * @param othelloGame Existing OthelloGame instance
      */
     public OthelloGame(OthelloGame othelloGame) {
-        this(new HumanPlayer(othelloGame.players.get(0)),
-                new HumanPlayer(othelloGame.players.get(1)), othelloGame.board.deepCopy());
+        this(new Player(othelloGame.players.get(0)),
+                new Player(othelloGame.players.get(1)), othelloGame.board.deepCopy());
     }
 
     /**
@@ -92,7 +91,7 @@ public class OthelloGame implements BoardGame {
     public boolean isGameOver() {
         return this.players.size() != 2 || this.board.isFull()
                 || (this.gameTurnAllowedMoves.isEmpty()
-                && this.board.getValidMoves(this.getPlayerTurn().getMark().getOpposite()).isEmpty());
+                && this.board.getValidMoves(this.getPlayerTurn().mark().getOpposite()).isEmpty());
     }
 
     /**
@@ -104,12 +103,12 @@ public class OthelloGame implements BoardGame {
      */
     /*@requires isGameOver();
       @requires isPlayerConnected(player);
-      @ensures board.countMarks(player.getMark()) > board.countMarks(player.getMark().getOpposite()) ==> \result == true;
+      @ensures board.countMarks(player.mark()) > board.countMarks(player.mark().getOpposite()) ==> \result == true;
       @pure; */
     @Override
     public boolean isWinner(Player player) {
         return isGameOver() && isPlayerConnected(player) && (this.players.size() == 1
-                || (this.board.countMarks(player.getMark()) > this.board.countMarks(player.getMark().getOpposite())));
+                || (this.board.countMarks(player.mark()) > this.board.countMarks(player.mark().getOpposite())));
     }
 
     /**
@@ -232,7 +231,7 @@ public class OthelloGame implements BoardGame {
       @requires !isGameOver(); */
     @Override
     public List<BoardMove> getValidMoves(Player player) {
-        return this.board.getValidMoves(player.getMark()).stream()
+        return this.board.getValidMoves(player.mark()).stream()
                 .map(collection -> new BoardMove(player, collection)).toList();
     }
 
@@ -259,14 +258,14 @@ public class OthelloGame implements BoardGame {
                     move.getSupportColumn(),
                     move.getExtensionRow(),
                     move.getExtensionColumn(),
-                    move.getPlayer().getMark());
+                    move.getPlayer().mark());
         }
 
         // Updating game turn
         this.gameTurn = (this.gameTurn + 1) % this.players.size();
 
         // Updating valid moves
-        this.gameTurnAllowedMoves = this.board.getValidMoves(this.getPlayerTurn().getMark());
+        this.gameTurnAllowedMoves = this.board.getValidMoves(this.getPlayerTurn().mark());
     }
 
     /**

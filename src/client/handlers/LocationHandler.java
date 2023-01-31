@@ -1,7 +1,7 @@
-package client;
+package client.handlers;
 
 import client.exceptions.GameNotFoundException;
-import client.handlers.SysoutHandler;
+import client.operators.SysoutOperator;
 import game.OthelloGame;
 
 import java.util.Queue;
@@ -29,10 +29,10 @@ public class LocationHandler implements Runnable {
         for (int i = 0; i < locationQueue.size(); i++) {
             int location = locationQueue.remove();
             this.gameHandler.getGame().doMove(this.gameHandler.getGame().locationToMove(location));
-            this.gameHandler.getClient().getMessageHandler().incomingMessage(this.gameHandler.getGame().getBoard().toString());
+            this.gameHandler.getClient().getMessageOperator().incomingMessage(this.gameHandler.getGame().getBoard().toString());
 
             if (location == OthelloGame.PASSING_MOVE_INDEX) {
-                this.gameHandler.getClient().getMessageHandler().incomingMessage(SysoutHandler.INFO + " A game turn was skipped!");
+                this.gameHandler.getClient().getMessageOperator().incomingMessage(SysoutOperator.INFO + " A game turn was skipped!");
             }
         }
 
@@ -42,8 +42,23 @@ public class LocationHandler implements Runnable {
      * Internal post update method that automatically skips current clients turn if no moves are available
      */
     private void postUpdate() {
+        // If an AI is running, it will automatically skip if no moves are valid.
+        // However, we need to keep track of ComputerPlayers turn
+        if (this.gameHandler.isComputerPlaying()) {
+            // Check if clients move went through, in case it was performed by the AI
+            if (this.gameHandler.isClientsTurn()) {
+                // If so, we notify the AIHandler running that it should determine the next move
+                synchronized (this.gameHandler.getComputerPlayer()) {
+                    this.gameHandler.setComputerPlayerTurn(true);
+                    this.gameHandler.getComputerPlayer().notify();
+                }
+            }
+
+            return;
+        }
+
         // Check if client can even make any more moves
-        if (this.gameHandler.getClient().getUsername().equals(this.gameHandler.getGame().getPlayerTurn().getUsername())
+        if (this.gameHandler.isClientsTurn()
                 && this.gameHandler.getGame().getValidMoves(this.gameHandler.getGame().getPlayerTurn()).isEmpty()) {
             // No moves are available for client in current turn, skipping turn
             try {

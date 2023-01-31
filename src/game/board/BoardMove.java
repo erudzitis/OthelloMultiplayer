@@ -1,5 +1,6 @@
 package game.board;
 
+import game.OthelloGame;
 import game.players.Player;
 
 import java.util.Arrays;
@@ -70,15 +71,6 @@ public class BoardMove {
     }
 
     /**
-     * Method that returns the particular moves mark type
-     * @return BoardMark
-     */
-    /*@pure; @*/
-    public BoardMark getMark() {
-        return this.player.getMark();
-    }
-
-    /**
      * Method that returns the particular moves endpoint row index
      * @return int row index, from 0 to 7
      */
@@ -132,5 +124,13 @@ public class BoardMove {
      */
     public boolean isPassing() {
         return this.isPassing;
+    }
+
+    /**
+     * Method that returns the location on the board of the move
+     * @return int, location on board, or 64 for passing move
+     */
+    public int getLocation() {
+        return this.isPassing ? OthelloGame.PASSING_MOVE_INDEX : Board.getIndex(this.getRow(), this.getColumn());
     }
 }

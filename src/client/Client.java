@@ -1,7 +1,7 @@
 package client;
 
-import client.handlers.MessageHandler;
-import client.handlers.SysoutHandler;
+import client.operators.MessageOperator;
+import client.operators.SysoutOperator;
 import exceptions.HandshakeFailed;
 import networking.Protocol;
 
@@ -25,7 +25,7 @@ public class Client {
     /**
      * Holds the assigned message handler that will handle the incoming messages from server
      */
-    private MessageHandler messageHandler;
+    private final MessageOperator messageOperator;
 
     /**
      * Holds and handles the current ongoing game that the client is playing (if any)
@@ -69,11 +69,10 @@ public class Client {
      * @param username String, desired client username
      */
     /*@requires username != null;
-      @assignable username;
-      @assignable messageHandler; */
+      @assignable username; */
     public Client(String username) {
         this.username = username;
-        this.messageHandler = new SysoutHandler();
+        this.messageOperator = new SysoutOperator();
         this.gameRoom = new GameRoom(this);
     }
 
@@ -126,8 +125,8 @@ public class Client {
      *
      * @return MessageHandler instance
      */
-    protected MessageHandler getMessageHandler() {
-        return this.messageHandler;
+    public MessageOperator getMessageOperator() {
+        return this.messageOperator;
     }
 
     /**
@@ -262,7 +261,6 @@ public class Client {
      */
     /*@requires line != null;
       @requires !handshakeEstablished;
-      @modifies serverSupportedExtensions;
       @assignable handshakeEstablished;
       @signals_only HandshakeFailed; */
     private void handleIncomingHandshake(String line) throws HandshakeFailed {
@@ -299,14 +297,14 @@ public class Client {
             // We have received indication from the server that login was successful
             case Protocol.LOGIN -> {
                 this.successfullyLoggedIn = true;
-                this.messageHandler.incomingMessage(SysoutHandler.SUCCESS + " Successfully logged in!");
+                this.messageOperator.incomingMessage(SysoutOperator.SUCCESS + " Successfully logged in!");
             }
             case Protocol.ALREADY_LOGGED_IN -> {
                 this.successfullyLoggedIn = false;
-                this.messageHandler.incomingMessage(SysoutHandler.ERROR + " A user with the provided username already exists!");
+                this.messageOperator.incomingMessage(SysoutOperator.ERROR + " A user with the provided username already exists!");
             }
-            case Protocol.LIST -> this.messageHandler.incomingMessage(SysoutHandler.INFO + " Online users: " + Protocol.listExtract(line));
-            case Protocol.ERROR -> this.messageHandler.incomingMessage(SysoutHandler.ERROR + " Provided move is invalid!");
+            case Protocol.LIST -> this.messageOperator.incomingMessage(SysoutOperator.INFO + " Online users: " + Protocol.listExtract(line));
+            case Protocol.ERROR -> this.messageOperator.incomingMessage(SysoutOperator.ERROR + " Provided move is invalid!");
             // All game related things are forwarded to the GameHandler
             case Protocol.NEWGAME, Protocol.MOVE, Protocol.GAMEOVER -> this.gameRoom.forwardToGameHandler(line);
         }

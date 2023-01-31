@@ -1,6 +1,8 @@
 package server;
 
 import networking.Protocol;
+import server.handlers.ClientHandler;
+import server.handlers.QueueHandler;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -39,12 +41,12 @@ public class Server {
     /**
      * Stores the list of all player usernames that are in the queue
      */
-    protected final /*@spec_public; @*/ List<String> queue = new ArrayList<>();
+    private final /*@spec_public; @*/ List<String> queue = new ArrayList<>();
 
     /**
      * Stores the list of all supported extensions by the server
      */
-    protected static final List<String> SUPPORTED_EXTENSIONS = new ArrayList<>();
+    public static final List<String> SUPPORTED_EXTENSIONS = new ArrayList<>();
 
     /**
      * Holds the description of the server
@@ -54,7 +56,7 @@ public class Server {
     /**
      * Holds the length of maximum supported username for clients
      */
-    protected static final int MAXIMUM_USERNAME_LENGTH = 30;
+    public static final int MAXIMUM_USERNAME_LENGTH = 30;
 
     /**
      * Method that returns the list of all connected user usernames on the server
@@ -110,10 +112,10 @@ public class Server {
                 this.queue.remove(clientUsername);
             } else {
                 this.queue.add(clientUsername);
-            }
 
-            // Notifying 'queue' thread
-            this.queue.notifyAll();
+                // Notifying 'queue' thread
+                this.queue.notify();
+            }
         }
     }
 
@@ -140,7 +142,7 @@ public class Server {
      *
      * @return Map<String, ClientHandler>
      */
-    protected Map<ClientHandler, String> getClientHandlers() {
+    public Map<ClientHandler, String> getClientHandlers() {
         return this.clientHandlers;
     }
 
@@ -149,8 +151,17 @@ public class Server {
      *
      * @return Map<String, ClientHandler>
      */
-    protected Map<String, ClientHandler> getClientHandlersReverse() {
+    public Map<String, ClientHandler> getClientHandlersReverse() {
         return this.clientHandlersReverse;
+    }
+
+    /**
+     * Method that associates client handler to a specific game room
+     * @param clientHandler ClientHandler assigned to the specific client
+     * @param gameRoom GameRoom instance for the newly created game
+     */
+    public void setRooms(ClientHandler clientHandler, GameRoom gameRoom) {
+        this.rooms.put(clientHandler, gameRoom);
     }
 
     /**
@@ -158,7 +169,7 @@ public class Server {
      *
      * @param clientHandler ClientHandler instance that was assigned to the disconnected client socket
      */
-    protected void clientDisconnected(ClientHandler clientHandler) {
+    public void clientDisconnected(ClientHandler clientHandler) {
         // Attempting to get hold of the client reference
         String clientUsername = this.clientHandlers.get(clientHandler);
 
@@ -199,7 +210,7 @@ public class Server {
      *
      * @param clientUsernames List<String> of client usernames
      */
-    protected void cleanUpGameRoom(List<String> clientUsernames) {
+    public void cleanUpGameRoom(List<String> clientUsernames) {
         synchronized (this.rooms) {
             for (String clientUsername : clientUsernames) {
                 this.rooms.remove(this.clientHandlersReverse.get(clientUsername));
@@ -305,7 +316,7 @@ public class Server {
      * Method that indicates whether the server instance is running
      * @return true / false
      */
-    protected boolean isRunning() {
+    public boolean isRunning() {
         return this.serverSocket != null && !this.serverSocket.isClosed();
     }
 

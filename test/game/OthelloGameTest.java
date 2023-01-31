@@ -1,6 +1,6 @@
 package game;
 
-import game.board.AlgebraicNotationConversionFailed;
+import game.board.exceptions.AlgebraicNotationConversionFailed;
 import game.board.Board;
 import game.board.BoardMark;
 import game.board.BoardMove;

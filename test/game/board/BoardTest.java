@@ -1,5 +1,6 @@
 package game.board;
 
+import game.board.exceptions.AlgebraicNotationConversionFailed;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

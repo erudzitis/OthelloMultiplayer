@@ -1,18 +1,19 @@
 package client;
 
+import client.exceptions.AIAssignedException;
 import client.exceptions.GameNotFoundException;
 import client.exceptions.GameTurnViolationException;
-import client.handlers.MessageHandler;
-import client.handlers.SysoutHandler;
+import client.handlers.GameHandler;
+import client.operators.MessageOperator;
+import client.operators.SysoutOperator;
 import client.ui.SysUtility;
 import client.exceptions.InvalidMoveException;
-import game.board.AlgebraicNotationConversionFailed;
+import game.board.exceptions.AlgebraicNotationConversionFailed;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ClientTUI {
@@ -25,6 +26,7 @@ public class ClientTUI {
     private static final String SKIP = "skip";
     private static final String HINT = "hint";
     private static final String HELP = "help";
+    private static final String AI = "ai";
 
     /**
      * Holds the entries of all supported TUI commands and their corresponding descriptions
@@ -34,7 +36,8 @@ public class ClientTUI {
             Map.entry(QUEUE, "Joins the player queue / leaves the queue if entered twice"),
             Map.entry(MOVE + " [Algebraic Notation]", "Attempts to perform the move while in a game. For example, move A5. If empty move command is provided, move is skipped"),
             Map.entry(SKIP, "Skips the game turn while in a game"),
-            Map.entry(HINT, "Outputs the list of possible moves in a game")
+            Map.entry(HINT, "Outputs the list of possible moves in a game"),
+            Map.entry(AI + " [level]", "Assigns an AI player to a match while in a game. Level 1 to 2 (more profound)")
     );
 
     // Client instance associated to the TUI
@@ -51,7 +54,7 @@ public class ClientTUI {
      * Method that prints out the manual of the TUI supported commands
      */
     public static void printManual() {
-        System.out.println(SysoutHandler.IDEA + " List of available commands, type 'help' for this menu: ");
+        System.out.println(SysoutOperator.IDEA + " List of available commands, type 'help' for this menu: ");
         printSeparator();
         for (Map.Entry<String, String> command : TUI_COMMANDS.entrySet()) {
             System.out.println(command.getKey() + " : " + command.getValue());
@@ -102,7 +105,7 @@ public class ClientTUI {
      * @return Client
      */
     public static Client createClient(SysUtility sysUtility) {
-        return new Client(sysUtility.readString(SysoutHandler.KEY + " Enter desired username ➨ "));
+        return new Client(sysUtility.readString(SysoutOperator.KEY + " Enter desired username ➨ "));
     }
 
     /**
@@ -117,7 +120,7 @@ public class ClientTUI {
 
         // If client couldn't connect to the provided server, we ask for address and port again
         if (!connected) {
-            this.client.getMessageHandler().incomingMessage(SysoutHandler.ERROR + " Couldn't connect to the server!");
+            this.client.getMessageOperator().incomingMessage(SysoutOperator.ERROR + " Couldn't connect to the server!");
             Executors.newSingleThreadScheduledExecutor().schedule(() -> this.connectClient(sysUtility),
                     2000, TimeUnit.MILLISECONDS);
         } else {
@@ -136,7 +139,7 @@ public class ClientTUI {
     public void ensureLogin(SysUtility sysUtility) {
         // Client is still not logged in
         if (!this.client.isSuccessfullyLoggedIn()) {
-            this.client.attemptLogin(sysUtility.readString(SysoutHandler.LOCK + " Username taken, try again ➨ "));
+            this.client.attemptLogin(sysUtility.readString(SysoutOperator.LOCK + " Username taken, try again ➨ "));
 
             Executors.newSingleThreadScheduledExecutor().schedule(() -> this.ensureLogin(sysUtility),
                     2000, TimeUnit.MILLISECONDS);
@@ -146,13 +149,13 @@ public class ClientTUI {
 
             // Ask for supported commands
             Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
-                this.handleCommand(sysUtility.readString(SysoutHandler.PROMPT + " Enter command ➨ "));
+                this.handleCommand(sysUtility.readString(SysoutOperator.PROMPT + " Enter command ➨ "));
             }, 0, 2000, TimeUnit.MILLISECONDS);
         }
     }
 
     public void handleCommand(String command) {
-        MessageHandler messageHandler = this.client.getMessageHandler();
+        MessageOperator messageHandler = this.client.getMessageOperator();
         GameHandler gameHandler = this.client.getGameRoom().getGameHandler();
         String[] commandSplit = command.split(" ");
 
@@ -163,29 +166,40 @@ public class ClientTUI {
                 try {
                     gameHandler.handleMove(commandSplit.length == 1 ? null : commandSplit[1]);
                 } catch (GameNotFoundException | GameTurnViolationException | InvalidMoveException |
-                         AlgebraicNotationConversionFailed e) {
-                    messageHandler.incomingMessage(SysoutHandler.ERROR + " " + e.getMessage());
+                         AlgebraicNotationConversionFailed | AIAssignedException e) {
+                    messageHandler.incomingMessage(SysoutOperator.ERROR + " " + e.getMessage());
                 } catch (ArrayIndexOutOfBoundsException e) {
-                    messageHandler.incomingMessage(SysoutHandler.UNKNOWN + " Something went wrong!");
+                    messageHandler.incomingMessage(SysoutOperator.UNKNOWN + " Something went wrong!");
                 }
             }
             case SKIP -> {
                 try {
                     gameHandler.skipTurn();
                 } catch (GameNotFoundException e) {
-                    messageHandler.incomingMessage(SysoutHandler.ERROR + " " + e.getMessage());
+                    messageHandler.incomingMessage(SysoutOperator.ERROR + " " + e.getMessage());
                 }
             }
             case HINT -> {
                 try {
                     gameHandler.giveHint();
                 } catch (GameNotFoundException | GameTurnViolationException e) {
-                    messageHandler.incomingMessage(SysoutHandler.ERROR + " " + e.getMessage());
+                    messageHandler.incomingMessage(SysoutOperator.ERROR + " " + e.getMessage());
+                }
+            }
+            case AI -> {
+                try {
+                    gameHandler.assignAI(Integer.parseInt(commandSplit[1]));
+                    messageHandler.incomingMessage(SysoutOperator.INFO + " AI assigned to the game!");
+                } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
+                    messageHandler.incomingMessage(String.format("%s Unknown command '%s'!",
+                            SysoutOperator.UNKNOWN, command));
+                } catch (GameNotFoundException | AIAssignedException e) {
+                    messageHandler.incomingMessage(SysoutOperator.ERROR + " " + e.getMessage());
                 }
             }
             case HELP -> printManual();
             default -> messageHandler.incomingMessage(String.format("%s Unknown command '%s'!",
-                    SysoutHandler.UNKNOWN, command));
+                    SysoutOperator.UNKNOWN, command));
         }
     }
 

@@ -1,5 +1,7 @@
 package client;
 
+import client.handlers.GameHandler;
+
 import java.io.IOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;

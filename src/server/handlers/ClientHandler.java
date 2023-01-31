@@ -1,7 +1,9 @@
-package server;
+package server.handlers;
 
 import exceptions.HandshakeFailed;
 import networking.Protocol;
+import server.GameRoom;
+import server.Server;
 
 import java.io.*;
 import java.net.Socket;
@@ -105,7 +107,6 @@ public class ClientHandler implements Runnable {
      * @throws HandshakeFailed if the incoming message is not HELLO protocol adherent
      */
     /*@requires line != null;
-      @assignable clientSupportedExtensions;
       @assignable handshakeAcknowledged;
       @signals_only HandshakeFailed; */
     private void acknowledgeHandshake(String line) throws HandshakeFailed {
@@ -179,8 +180,6 @@ public class ClientHandler implements Runnable {
                 if (!isClientLoggedIn()) break;
                 this.handleMoveCommand(line);
             }
-            // Client wants to disconnect, closing socket
-            case Protocol.DISCONNECT -> this.terminateConnection();
         }
     }
 
@@ -218,7 +217,7 @@ public class ClientHandler implements Runnable {
         GameRoom gameRoom = this.server.getRooms().get(this);
 
         // Check if it even is the clients turn
-        if (!gameRoom.getGameHandler().getGame().getPlayerTurn().getUsername()
+        if (!gameRoom.getGameHandler().getGame().getPlayerTurn().username()
                 .equals(this.server.getClientHandlers().get(this))) return;
 
         // Writing to the pipe input of the game handler

@@ -1,9 +1,11 @@
-package server;
+package server.handlers;
 
 import game.BoardGame;
 import game.board.BoardMove;
 import game.players.Player;
 import networking.Protocol;
+import server.GameRoom;
+import server.Server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -110,7 +112,7 @@ public class GameHandler implements Runnable {
                 this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DRAW, null), clientUsernames);
             } else {
                 // Otherwise, we inform winner and looser separately
-                this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.VICTORY, winner.getUsername()),
+                this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.VICTORY, winner.username()),
                         clientUsernames);
             }
 
@@ -134,7 +136,7 @@ public class GameHandler implements Runnable {
             }
         } catch (IOException e) {
             // Cleaning up the room
-            this.performCleanup(this.game.getPlayers().stream().map(Player::getUsername).toList());
+            this.performCleanup(this.game.getPlayers().stream().map(Player::username).toList());
         }
     }
 
@@ -159,11 +161,11 @@ public class GameHandler implements Runnable {
                 // Move is not valid, sending ERROR protocol message back to the client through client handler
                 if (clientMove == null) {
                     this.server.getClientHandlersReverse().get(
-                            this.game.getPlayerTurn().getUsername()).sendMessage(Protocol.errorFormat());
+                            this.game.getPlayerTurn().username()).sendMessage(Protocol.errorFormat());
                     break;
                 }
 
-                List<String> clientUsernames = this.game.getPlayers().stream().map(Player::getUsername).toList();
+                List<String> clientUsernames = this.game.getPlayers().stream().map(Player::username).toList();
 
                 // Otherwise, keeping track of the move on the server
                 this.game.doMove(clientMove);
@@ -180,15 +182,15 @@ public class GameHandler implements Runnable {
 
                 // Getting the player that still remains in the game
                 Optional<Player> remainingPlayer = this.game.getPlayers().stream()
-                        .filter(player -> !player.getUsername().equals(disconnectedUsername)).findFirst();
+                        .filter(player -> !player.username().equals(disconnectedUsername)).findFirst();
 
                 // Sending game over sequence to the remaining player that is going to become the winner automatically
                 remainingPlayer.ifPresent(player ->
-                    this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DISCONNECT, null), player.getUsername())
+                    this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DISCONNECT, null), player.username())
                 );
 
                 // Cleaning up the room
-                this.performCleanup(this.game.getPlayers().stream().map(Player::getUsername).toList());
+                this.performCleanup(this.game.getPlayers().stream().map(Player::username).toList());
             }
         }
     }

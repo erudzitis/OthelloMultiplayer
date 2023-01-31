@@ -1,13 +1,10 @@
-package client.handlers;
+package client.operators;
 
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
-public class SysoutHandler implements MessageHandler {
+public class SysoutOperator implements MessageOperator {
     public static final String ERROR = "❌";
     public static final String INFO = "ℹ";
     public static final String UNKNOWN = "❓";
@@ -78,7 +75,7 @@ public class SysoutHandler implements MessageHandler {
      * @param message String incoming message
      */
     @Override
-    public MessageHandler incomingMessage(String message) {
+    public MessageOperator incomingMessage(String message) {
         this.addSoundEffect(message);
         System.out.println(message);
 

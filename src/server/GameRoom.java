@@ -2,7 +2,8 @@ package server;
 
 import game.OthelloGame;
 import game.board.BoardMark;
-import game.players.HumanPlayer;
+import game.players.Player;
+import server.handlers.GameHandler;
 
 import java.io.IOException;
 import java.io.PipedReader;
@@ -21,12 +22,12 @@ public class GameRoom {
     /**
      * Input for game handler that is going to be reading dispatched messages from the client handler
      */
-    private PipedReader pipedInput;
+    private final PipedReader pipedInput;
 
     /**
      * Output for client handler to write to
      */
-    private PrintWriter pipedOutput;
+    private final PrintWriter pipedOutput;
 
     /**
      * Initializes the game room, game handler
@@ -39,8 +40,8 @@ public class GameRoom {
         this.gameHandler = new GameHandler(server,
                 this,
                 new OthelloGame(
-                        new HumanPlayer(firstUsername, BoardMark.BLACK),
-                        new HumanPlayer(secondUsername, BoardMark.WHITE)),
+                        new Player(firstUsername, BoardMark.BLACK),
+                        new Player(secondUsername, BoardMark.WHITE)),
                 this.pipedInput);
 
         // Running the game handler

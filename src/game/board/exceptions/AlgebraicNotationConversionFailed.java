@@ -1,4 +1,4 @@
-package game.board;
+package game.board.exceptions;
 
 /**
  * Exception that indicates that number conversion from or to Algebraic Notation was not successful
