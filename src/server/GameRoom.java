@@ -11,7 +11,8 @@ import java.io.PipedWriter;
 import java.io.PrintWriter;
 
 /**
- * "Helper" class that holds together the game handler of a particular game room
+ * "Helper" class that holds together the game handler of a particular game room,
+ * and provides functionality for messages to be forwarded to the GameHandler assigned to a particular ongoing game
  */
 public class GameRoom {
     /**
@@ -30,7 +31,7 @@ public class GameRoom {
     private final PrintWriter pipedOutput;
 
     /**
-     * Initializes the game room, game handler
+     * Constructor, initializes the game room, game handler
      * @throws IOException if IO communication creation with GameHandler that gets assigned fails
      */
     public GameRoom(Server server, String firstUsername, String secondUsername) throws IOException {
@@ -53,6 +54,7 @@ public class GameRoom {
      *
      * @return GameHandler attached to this GameRoom
      */
+    /*@pure; @*/
     public GameHandler getGameHandler() {
         return this.gameHandler;
     }

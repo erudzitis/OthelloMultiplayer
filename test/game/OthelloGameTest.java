@@ -4,7 +4,7 @@ import game.board.exceptions.AlgebraicNotationConversionFailed;
 import game.board.Board;
 import game.board.BoardMark;
 import game.board.BoardMove;
-import game.players.HumanPlayer;
+import game.players.Player;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,8 +17,8 @@ class OthelloGameTest {
 
     @BeforeEach
     void setUp() {
-        this.boardGame = new OthelloGame(new HumanPlayer("Ernests", BoardMark.BLACK),
-                new HumanPlayer("Jonathan", BoardMark.WHITE));
+        this.boardGame = new OthelloGame(new Player("Ernests", BoardMark.BLACK),
+                new Player("Jonathan", BoardMark.WHITE));
     }
 
     /**
@@ -42,7 +42,7 @@ class OthelloGameTest {
         this.boardGame.doMove(boardMove);
         Assertions.assertTrue(this.boardGame.getBoard().countMarks(BoardMark.BLACK) >
                 boardGameCopy.getBoard().countMarks(BoardMark.BLACK));
-        Assertions.assertFalse(this.boardGame.getPlayerTurn().getUsername().equals(boardGameCopy.getPlayerTurn().getUsername()));
+        Assertions.assertFalse(this.boardGame.getPlayerTurn().username().equals(boardGameCopy.getPlayerTurn().username()));
     }
 
     /**

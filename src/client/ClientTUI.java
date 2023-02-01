@@ -40,8 +40,18 @@ public class ClientTUI {
             Map.entry(AI + " [level]", "Assigns an AI player to a match while in a game. Level 1 to 2 (more profound)")
     );
 
-    // Client instance associated to the TUI
+    /**
+     * Client instance associated to the TUI
+     */
     private Client client;
+
+    /**
+     * Method that assigns client instance to the TUI
+     * @param client
+     */
+    protected void setClient(Client client) {
+        this.client = client;
+    }
 
     /**
      * Internal helper method that displays line separator in the TUI
@@ -212,8 +222,7 @@ public class ClientTUI {
         printWelcome();
 
         // Client creation
-        Client client = createClient(sysUtility);
-        tui.client = client;
+        tui.setClient(createClient(sysUtility));
 
         // Connecting to a server and verifying that the automatic login process went through
         tui.connectClient(sysUtility);

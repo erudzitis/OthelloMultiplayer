@@ -18,6 +18,7 @@ public class QueueHandler implements Runnable {
 
     /**
      * Initializes server reference
+     *
      * @param server Server instance
      */
     public QueueHandler(Server server) {
@@ -67,18 +68,22 @@ public class QueueHandler implements Runnable {
 
                     // Keeping track of the rooms (used for ease of access, this way client handler will be able to
                     // get back the reference to the pipe to write to for game rooms game handler)
-                    this.server.setRooms(firstClientHandler, gameRoom);
-                    this.server.setRooms(secondClientHandler, gameRoom);
+                    synchronized (this.server.getRooms()) {
+                        this.server.setRooms(firstClientHandler, gameRoom);
+                        this.server.setRooms(secondClientHandler, gameRoom);
+                    }
+
+                    // Clearing up space in the queue
+                    this.server.setQueue(firstClientHandler);
+                    this.server.setQueue(secondClientHandler);
 
                     // Notifying both clients of this newly created game
                     this.server.broadCastMessage(Protocol.newGameFormat(firstClientUsername, secondClientUsername),
                             firstClientUsername,
                             secondClientUsername);
 
-                    // Clearing up space in the queue
-                    this.server.setQueue(firstClientHandler);
-                    this.server.setQueue(secondClientHandler);
                 }
+
             }
         }
     }

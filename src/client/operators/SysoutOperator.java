@@ -4,7 +4,13 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Consumes incoming messages for the client, displays them in a TUI and plays corresponding sound effect
+ */
 public class SysoutOperator implements MessageOperator {
+    /**
+     * Constants for text formatting and later on matched to a sound effect
+     */
     public static final String ERROR = "❌";
     public static final String INFO = "ℹ";
     public static final String UNKNOWN = "❓";
@@ -15,6 +21,7 @@ public class SysoutOperator implements MessageOperator {
     public static final String IDEA = "\uD83D\uDCA1";
     public static final String GAME = "\uD83C\uDFAE";
     public static final String FINISH = "\uD83C\uDFC1";
+
     private static final String SOUND_PATH = System.getProperty("user.dir") + "/src/client/sound/";
 
     /**

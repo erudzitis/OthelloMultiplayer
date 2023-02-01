@@ -2,12 +2,21 @@ package client.handlers;
 
 import game.board.BoardMove;
 
+/**
+ * Runnable that handles the ComputerPlayer assigned to the current game.
+ * Keeps track of the AI turn and determines move for the client and automatically submits it to server for validation
+ */
 public class AIHandler implements Runnable {
     /**
      * Reference back to the GameHandler instance that holds the queue
      */
     private final GameHandler gameHandler;
 
+    /**
+     * Constructor
+     * @param gameHandler GameHandler assigned to the ongoing game
+     */
+    /*@requires gameHandler != null; @*/
     public AIHandler(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
     }
@@ -15,6 +24,7 @@ public class AIHandler implements Runnable {
     /**
      * Runs this operation.
      */
+    /*@requires gameHandler.hasOngoingGame(); @*/
     @Override
     public void run() {
         while (this.gameHandler.hasOngoingGame()) {

@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class MiniMaxCornerStrategy implements Strategy {
     //test depth
-    private static final int MAX_DEPTH = 4;
+    private static final int MAX_DEPTH = 3;
 
     private static final List<Integer> VALUE_4 = Arrays.asList(0, 7, 63, 56);
     private static final List<Integer> VALUE_NEG_3 = Arrays.asList(1, 6, 8, 15, 48, 55, 57, 62);
@@ -98,7 +98,7 @@ public class MiniMaxCornerStrategy implements Strategy {
         if (depth == MAX_DEPTH || game.isGameOver()) {
             return getScore(game);
         } else {
-            List<Integer> scores = new ArrayList<>(List.of(0));
+            List<Integer> scores = new ArrayList<>();
             for (BoardMove move : game.getValidMoves(game.getPlayerTurn())) {
                 //create a copy for each move and do the move on the copy
                 BoardGame currentCopy = game.deepCopy();
@@ -109,6 +109,8 @@ public class MiniMaxCornerStrategy implements Strategy {
                 int score = minMaxValue(currentCopy, depth + 1, !isMax);
                 scores.add(score);
             }
+
+            if (scores.isEmpty()) return 0;
 
             //check if the current depth is max or min
             if (isMax) {

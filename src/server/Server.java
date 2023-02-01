@@ -9,6 +9,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
+/**
+ * Server class that holds the users, ClientHandler's assigned to each client, GameRoom's and players in the queue
+ */
 public class Server {
     /*@public invariant (\forall int i; i > 0 && i < queue.size();
         (\exists int j; j > 0 && j < users.size(); queue.get(i).equals(users.get(j)))); @*/
@@ -134,7 +137,9 @@ public class Server {
      * @return Map<String, BoardGame>
      */
     public Map<ClientHandler, GameRoom> getRooms() {
-        return this.rooms;
+        synchronized (this.rooms) {
+            return this.rooms;
+        }
     }
 
     /**

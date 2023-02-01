@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Queue;
 
 /**
- * Runnable that handles assigned game state on the client
+ * Runnable that handles assigned game state on the client, holds the location queue for LocationHandler,
+ * and ComputerPlayer AI instance. Spawns thread for LocationHandler and AIHandler
  */
 public class GameHandler implements Runnable {
     /**
@@ -59,9 +60,10 @@ public class GameHandler implements Runnable {
     private boolean computerPlayerTurn = false;
 
     /**
-     * Assigns the reference to the current initialized client
+     * Constructor, assigns the reference to the current initialized client and takes piped input
      *
      * @param client Client instance
+     * @param input Reader piped input that will receive forwarded messages from Client
      */
     public GameHandler(Client client, Reader input) {
         this.client = client;
@@ -73,6 +75,7 @@ public class GameHandler implements Runnable {
      *
      * @return Queue<Integer> of board move index locations
      */
+    /*@pure; @*/
     protected Queue<Integer> getQueue() {
         synchronized (this.locationQueue) {
             return this.locationQueue;
@@ -81,8 +84,11 @@ public class GameHandler implements Runnable {
 
     /**
      * Internal method that adds move location to the queue if there is ongoing game
-     * @param location int, move location
+     * @param location int, valid move location on board
      */
+    /*@requires location >= 0 && location <= OthelloGame.PASSING_MOVE_INDEX;
+      @ensures \old(locationQueue).size() == locationQueue.size() + 1;
+      @pure; @*/
     private void addToQueue(int location) {
         synchronized (this.locationQueue) {
             if (this.game == null) return;
@@ -97,6 +103,7 @@ public class GameHandler implements Runnable {
      *
      * @return boolean
      */
+    /*@pure; @*/
     protected boolean hasOngoingGame() {
         return this.game != null;
     }
@@ -105,6 +112,7 @@ public class GameHandler implements Runnable {
      * Method that returns the client instance associated to the GameHandler
      * @return Client instance
      */
+    /*@pure; @*/
     protected Client getClient() {
         return this.client;
     }
@@ -113,6 +121,7 @@ public class GameHandler implements Runnable {
      * Method that returns the ongoing game instance associated to the GameHandler
      * @return BoardGame instance
      */
+    /*@pure; @*/
     protected BoardGame getGame() {
         return this.game;
     }
@@ -121,6 +130,7 @@ public class GameHandler implements Runnable {
      * Method that states if at any given moment at the game, the AI is playing for the current client
      * @return true / false
      */
+    /*@pure; @*/
     protected boolean isComputerPlaying() {
         return this.computerPlayer != null;
     }
@@ -129,6 +139,7 @@ public class GameHandler implements Runnable {
      * Method that returns the ComputerPlayer instance attached to the current game
      * @return null, if there is no AI assigned at the moment, ComputerPlayer otherwise
      */
+    /*@pure; @*/
     protected ComputerPlayer getComputerPlayer() {
         return this.computerPlayer;
     }
@@ -137,6 +148,7 @@ public class GameHandler implements Runnable {
      * Method that states whether it's clients turn to go in the game
      * @return true / false
      */
+    /*@pure; @*/
     protected boolean isClientsTurn() {
         return this.game.getPlayerTurn().username().equals(this.client.getUsername());
     }
@@ -145,6 +157,7 @@ public class GameHandler implements Runnable {
      * Method that indicates whether the ComputerPlayer can perform a move
      * @return true / false
      */
+    /*@pure; @*/
     protected boolean isComputerPlayerTurn() {
         return this.computerPlayerTurn;
     }
@@ -153,6 +166,7 @@ public class GameHandler implements Runnable {
      * Method that updates the state status that indicates if ComputerPlayer can perform a move
      * @param state boolean updated state
      */
+    /*@modifies computerPlayerTurn; @*/
     protected void setComputerPlayerTurn(boolean state) {
         this.computerPlayerTurn = state;
     }
@@ -161,6 +175,8 @@ public class GameHandler implements Runnable {
      * Method that sends appropriate protocol message indicating that the turn is to be skipped
      * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
      */
+    /*@requires hasOngoingGame();
+      @signals_only GameNotFoundException; @*/
     public void skipTurn() throws GameNotFoundException {
         // Check if there is ongoing game
         if (this.game == null) {
@@ -175,6 +191,9 @@ public class GameHandler implements Runnable {
      * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
      * @throws GameTurnViolationException if the method is called at the moment when its opponents game turn
      */
+    /*@requires hasOngoingGame();
+      @requires isClientsTurn();
+      @signals_only GameNotFoundException, GameTurnViolationException; @*/
     public void giveHint() throws GameNotFoundException, GameTurnViolationException {
         // Check if there is ongoing game
         if (this.game == null) {
@@ -212,6 +231,11 @@ public class GameHandler implements Runnable {
      * @throws AlgebraicNotationConversionFailed if provided move in SAN couldn't be converted to a valid location on board
      * @throws AIAssignedException if AI is assigned and determining moves for the client
      */
+    /*@requires hasOngoingGame();
+      @requires isClientsTurn();
+      @requires !isComputerPlaying();
+      @signals_only GameNotFoundException, GameTurnViolationException, InvalidMoveException,
+       AlgebraicNotationConversionFailed, AIAssignedException; @*/
     public void handleMove(String desiredMoveSAN) throws GameNotFoundException, GameTurnViolationException,
             InvalidMoveException, AlgebraicNotationConversionFailed, AIAssignedException {
         // Check if there is ongoing game
@@ -257,10 +281,14 @@ public class GameHandler implements Runnable {
 
     /**
      * Method that assigns an AI to the ongoing game
-     * @param level int, level of the ai. From 1 to 2
+     * @param level int, level of the AI. From 1 to 2
      * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
      * @throws AIAssignedException if an AI is already assigned to the current game
      */
+    /*@requires hasOngoingGame();
+      @requires !isComputerPlaying();
+      @modifies computerPlayerTurn;
+      @signals_only GameNotFoundException, AIAssignedException; @*/
     public void assignAI(int level) throws GameNotFoundException, AIAssignedException {
         // Check if there is ongoing game
         if (this.game == null) {
@@ -310,6 +338,7 @@ public class GameHandler implements Runnable {
      * Internal method that handles the new game protocol message
      * @param line String protocol line
      */
+    /*@modifies game; @*/
     private void handleNewGame(String line) {
         // We received an event from the client, that a new game has started
         // We initialize the game
@@ -368,6 +397,9 @@ public class GameHandler implements Runnable {
      * Internal method that handles the game over protocol message
      * @param line String protocol line
      */
+    /*@requires hasOngoingGame();
+      @modifies game;
+      @modifies computerPlayer; */
     private void handleGameOver(String line) {
         // There must be an ongoing game for it to end
         if (this.game == null) return;

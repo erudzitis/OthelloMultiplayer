@@ -10,6 +10,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class that acts as a middle-man between the Server and Client and provides reciprocal communication,
+ * handles incoming protocol commands from the Client 'through' Server
+ */
 public class ClientHandler implements Runnable {
     /*@public invariant clientSocket != null;
       @public invariant server != null;*/
@@ -22,7 +26,7 @@ public class ClientHandler implements Runnable {
     /**
      * Holds the output of the client socket
      */
-    private PrintWriter clientSocketOutput;
+    private final PrintWriter clientSocketOutput;
 
     /**
      * Holds the reference back to the server
@@ -48,7 +52,6 @@ public class ClientHandler implements Runnable {
      */
     /*@requires server != null;
       @requires clientSocket != null;
-      @assignable clientSocketOutput;
       @signals_only IOException; */
     public ClientHandler(Server server, Socket clientSocket) throws IOException {
         this.server = server;
@@ -153,7 +156,8 @@ public class ClientHandler implements Runnable {
      *
      * @param line String line that we received from the server
      */
-    /*@requires line != null; @*/
+    /*@requires line != null;
+      @requires isClientLoggedIn(); @*/
     private void handleIncomingCommand(String line) {
         String command = Protocol.commandExtract(line);
 
@@ -180,6 +184,7 @@ public class ClientHandler implements Runnable {
                 if (!isClientLoggedIn()) break;
                 this.handleMoveCommand(line);
             }
+            case Protocol.DISCONNECT -> this.terminateConnection();
         }
     }
 

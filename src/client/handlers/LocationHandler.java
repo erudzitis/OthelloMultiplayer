@@ -7,7 +7,9 @@ import game.OthelloGame;
 import java.util.Queue;
 
 /**
- * Runnable that applies incoming validated moves from the server to the ongoing game instance
+ * Runnable that applies incoming validated moves from the server (stored in the queue) to the ongoing game instance,
+ * and performs post-update processing, to coordinate the ComputerPlayers turn (if assigned),
+ * and handle the case scenario when client has no possible moves left
  */
 public class LocationHandler implements Runnable {
     /**
@@ -15,14 +17,20 @@ public class LocationHandler implements Runnable {
      */
     private final GameHandler gameHandler;
 
+    /**
+     * Constructor
+     * @param gameHandler GameHandler assigned to the ongoing game
+     */
+    /*@requires gameHandler != null; @*/
     public LocationHandler(GameHandler gameHandler) {
         this.gameHandler = gameHandler;
     }
 
     /**
-     * Internal method that applies all queued locations
+     * Internal 'helper' method that applies all queued locations
      * @param locationQueue Queue<Integer>
      */
+    /*@requires locationQueue.equals(gameHandler.getQueue()); @*/
     private void applyLocations(Queue<Integer> locationQueue) {
         // If there are un-applied moves that we should keep track of, we apply them,
         // all the move locations must be valid out of the box, because they came from the server
@@ -41,6 +49,8 @@ public class LocationHandler implements Runnable {
     /**
      * Internal post update method that automatically skips current clients turn if no moves are available
      */
+    /*@ensures gameHandler.isComputerPlaying() && gameHandler.isClientsTurn()
+        ==> gameHandler.isComputerPlayerTurn() == true; */
     private void postUpdate() {
         // If an AI is running, it will automatically skip if no moves are valid.
         // However, we need to keep track of ComputerPlayers turn
@@ -72,6 +82,7 @@ public class LocationHandler implements Runnable {
     /**
      * Runs this operation
      */
+    /*@requires gameHandler.hasOngoingGame(); @*/
     @Override
     public void run() {
         while (this.gameHandler.hasOngoingGame()) {

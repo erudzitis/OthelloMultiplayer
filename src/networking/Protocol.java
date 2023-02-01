@@ -12,6 +12,9 @@ import java.util.*;
  * [argument]+ optional input or argument 1 or more times.
  */
 public class Protocol {
+    /**
+     * Protocol constants
+     */
     public static final String HELLO = "HELLO";
     public static final String LOGIN = "LOGIN";
     public static final String SEPARATOR = "~";

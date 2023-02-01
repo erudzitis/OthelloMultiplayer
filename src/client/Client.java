@@ -11,6 +11,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Client class that communicates with ClientHandler on the server,
+ * and acts as a controller between Server and client GameRoom
+ */
 public class Client {
     /**
      * Holds the socket of the server that client has connected to
@@ -101,7 +105,7 @@ public class Client {
      *
      * @param desiredUsername String, desired username of client
      */
-    /*@requires desiredUsername != null;
+    /*@requires desiredUsername != null && desiredUsername != username;
       @requires !successfullyLoggedIn;
       @assignable username; @*/
     public void setUsername(String desiredUsername) {
@@ -125,6 +129,7 @@ public class Client {
      *
      * @return MessageHandler instance
      */
+    /*@pure; @*/
     public MessageOperator getMessageOperator() {
         return this.messageOperator;
     }
@@ -134,6 +139,7 @@ public class Client {
      *
      * @return GameRoom instance
      */
+    /*@pure; @*/
     protected GameRoom getGameRoom() {
         return this.gameRoom;
     }
@@ -216,14 +222,16 @@ public class Client {
      *
      * @param newUsername String new desired username
      */
+    /*@requires !successfullyLoggedIn; @*/
     public void attemptLogin(String newUsername) {
-        this.username = newUsername;
+        this.setUsername(newUsername);
         this.attemptLogin();
     }
 
     /**
      * Internal method that starts handshake initialization with the server
      */
+    /*@requires !isHandshakeEstablished(); @*/
     private void sendInitializeHandshake() {
         this.sendMessage(Protocol.helloFormat(Client.CLIENT_DESCRIPTION, Client.SUPPORTED_EXTENSIONS));
     }
@@ -241,6 +249,7 @@ public class Client {
      *
      * @param location int, location index on board
      */
+    /*@requires location >= 0 && location <= 64; */
     public void attemptMove(int location) {
         this.sendMessage(Protocol.moveFormat(location));
     }
