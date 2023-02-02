@@ -5,11 +5,12 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Consumes incoming messages for the client, displays them in a TUI and plays corresponding sound effect
+ * Consumes incoming messages for the client,
+ * displays them in a TUI and plays corresponding sound effect.
  */
 public class SysoutOperator implements MessageOperator {
     /**
-     * Constants for text formatting and later on matched to a sound effect
+     * Constants for text formatting and later on matched to a sound effect.
      */
     public static final String ERROR = "❌";
     public static final String INFO = "ℹ";
@@ -25,7 +26,7 @@ public class SysoutOperator implements MessageOperator {
     private static final String SOUND_PATH = System.getProperty("user.dir") + "/src/client/sound/";
 
     /**
-     * Internal method that attempts to play sound effect
+     * Internal method that attempts to play sound effect.
      *
      * @param name String, name of the specific sound effect
      */
@@ -37,20 +38,25 @@ public class SysoutOperator implements MessageOperator {
                 AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundEffect);
 
                 Clip clip = (Clip) AudioSystem.getLine(new Line.Info(Clip.class));
-                // Creating a listener, that will automatically close open resource after being played
+                // Creating a listener,
+                // that will automatically close open resource after being played
                 clip.addLineListener(event -> {
-                    if (event.getType().equals(LineEvent.Type.STOP)) clip.close();
+                    if (event.getType().equals(LineEvent.Type.STOP)) {
+                        clip.close();
+                    }
                 });
                 clip.open(audioStream);
                 clip.start();
 
-            } catch (LineUnavailableException | UnsupportedAudioFileException | IOException ignored) {
+            } catch (LineUnavailableException | UnsupportedAudioFileException |
+                     IOException ignored) {
             }
         }).start();
     }
 
     /**
-     * Internal method that adds sound effect from incoming messages
+     * Internal method that adds sound effect from incoming messages.
+     *
      * @param message String, incoming message
      */
     private void addSoundEffect(String message) {
@@ -76,8 +82,9 @@ public class SysoutOperator implements MessageOperator {
     }
 
     /**
-     * Method that consumes incoming messages that should be delivered to the client and displays it accordingly,
-     * supports method chaining
+     * Method that consumes incoming messages
+     * that should be delivered to the client and displays it accordingly,
+     * supports method chaining.
      *
      * @param message String incoming message
      */

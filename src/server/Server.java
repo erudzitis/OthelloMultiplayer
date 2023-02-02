@@ -10,54 +10,55 @@ import java.net.Socket;
 import java.util.*;
 
 /**
- * Server class that holds the users, ClientHandler's assigned to each client, GameRoom's and players in the queue
+ * Server class that holds the users, ClientHandler's assigned to each client,
+ * GameRoom's and players in the queue.
  */
 public class Server {
     /*@public invariant (\forall int i; i > 0 && i < queue.size();
         (\exists int j; j > 0 && j < users.size(); queue.get(i).equals(users.get(j)))); @*/
 
     /**
-     * Stores the servers socket
+     * Stores the servers socket.
      */
     private ServerSocket serverSocket;
 
     /**
-     * Stores client handler to client username pairs
+     * Stores client handler to client username pairs.
      */
     private final Map<ClientHandler, String> clientHandlers = new HashMap<>();
 
     /**
-     * Stores client username to client handler pairs
+     * Stores client username to client handler pairs.
      */
     private final Map<String, ClientHandler> clientHandlersReverse = new HashMap<>();
 
     /**
-     * Stores client handler to board game room pairs
+     * Stores client handler to board game room pairs.
      */
     protected final /*@spec_public; @*/ Map<ClientHandler, GameRoom> rooms = new HashMap<>();
 
     /**
-     * Stores connected client usernames
+     * Stores connected client usernames.
      */
     private final /*@spec_public; @*/ List<String> users = new ArrayList<>();
 
     /**
-     * Stores the list of all player usernames that are in the queue
+     * Stores the list of all player usernames that are in the queue.
      */
     private final /*@spec_public; @*/ List<String> queue = new ArrayList<>();
 
     /**
-     * Stores the list of all supported extensions by the server
+     * Stores the list of all supported extensions by the server.
      */
     public static final List<String> SUPPORTED_EXTENSIONS = new ArrayList<>();
 
     /**
-     * Holds the description of the server
+     * Holds the description of the server.
      */
     public static final String SERVER_DESCRIPTION = "Yellow 7 Server";
 
     /**
-     * Holds the length of maximum supported username for clients
+     * Holds the length of maximum supported username for clients.
      */
     public static final int MAXIMUM_USERNAME_LENGTH = 30;
 
@@ -83,7 +84,7 @@ public class Server {
     }
 
     /**
-     * Synchronized method that initializes mappings between client username and its handler
+     * Synchronized method that initializes mappings between client username and its handler.
      *
      * @param username      String, username of the authenticated client
      * @param clientHandler ClientHandler allocated to that client connection
@@ -108,7 +109,9 @@ public class Server {
             String clientUsername = this.clientHandlers.get(clientHandler);
 
             // Check if the client even exists?
-            if (clientUsername == null) return;
+            if (clientUsername == null) {
+                return;
+            }
 
             // Check if the user is already in the queue
             if (this.queue.contains(clientUsername)) {
@@ -123,7 +126,7 @@ public class Server {
     }
 
     /**
-     * Method that returns the list of client usernames that are in waiting queue for a game
+     * Method that returns the list of client usernames that are in waiting queue for a game.
      *
      * @return List<String> of client usernames
      */
@@ -132,7 +135,7 @@ public class Server {
     }
 
     /**
-     * Method that returns the map of ongoing match room names and their associated rooms
+     * Method that returns the map of ongoing match room names and their associated rooms.
      *
      * @return Map<String, BoardGame>
      */
@@ -143,7 +146,7 @@ public class Server {
     }
 
     /**
-     * Method that returns the map of assigned client handlers and corresponding client usernames
+     * Method that returns the map of assigned client handlers and corresponding client usernames.
      *
      * @return Map<String, ClientHandler>
      */
@@ -152,7 +155,7 @@ public class Server {
     }
 
     /**
-     * Method that returns the map of existing client usernames and their assigned client handlers
+     * Method that returns the map of existing client usernames and their assigned client handlers.
      *
      * @return Map<String, ClientHandler>
      */
@@ -161,7 +164,8 @@ public class Server {
     }
 
     /**
-     * Method that associates client handler to a specific game room
+     * Method that associates client handler to a specific game room.
+     *
      * @param clientHandler ClientHandler assigned to the specific client
      * @param gameRoom GameRoom instance for the newly created game
      */
@@ -170,16 +174,20 @@ public class Server {
     }
 
     /**
-     * Synchronized method that handles the disconnection of a client by informing any other dependant objects
+     * Synchronized method that handles the disconnection of a client
+     * by informing any other dependant objects.
      *
-     * @param clientHandler ClientHandler instance that was assigned to the disconnected client socket
+     * @param clientHandler ClientHandler instance that was assigned
+     *                     to the disconnected client socket
      */
     public void clientDisconnected(ClientHandler clientHandler) {
         // Attempting to get hold of the client reference
         String clientUsername = this.clientHandlers.get(clientHandler);
 
         // Client doesn't appear to exist
-        if (clientUsername == null) return;
+        if (clientUsername == null) {
+            return;
+        }
 
         // Attempting to get the reference to the GameRoom that the client is in
         GameRoom clientGameRoom = this.rooms.get(clientHandler);
@@ -188,9 +196,11 @@ public class Server {
         if (clientGameRoom != null) {
             synchronized (clientGameRoom) {
                 // Informing game handler of termination
-                clientGameRoom.forwardToGameHandler(Protocol.clientDisconnectedFormat(clientUsername));
+                clientGameRoom.forwardToGameHandler(
+                    Protocol.clientDisconnectedFormat(clientUsername));
 
-                // Need to wait until message is forwarded back to clients and room cleanup is performed
+                // Need to wait until message is forwarded back to clients
+                // and room cleanup is performed
                 while (!clientGameRoom.getGameHandler().isCleanupPerformed()) {
                     try {
                         clientGameRoom.wait();
@@ -211,7 +221,7 @@ public class Server {
     }
 
     /**
-     * Synchronized method that cleans up fields related to client username game rooms
+     * Synchronized method that cleans up fields related to client username game rooms.
      *
      * @param clientUsernames List<String> of client usernames
      */
@@ -224,7 +234,8 @@ public class Server {
     }
 
     /**
-     * Internal method that attempts to accept client and initialize a client handler for it
+     * Internal method that attempts to accept client and initialize a client handler for it.
+     *
      * @param clientSocket Socket of the client that wants to connect to the server
      */
     private void acceptClient(Socket clientSocket) {
@@ -234,7 +245,8 @@ public class Server {
             // Creating a new separate thread for this client handler
             new Thread(clientSocketHandler).start();
         } catch (IOException ignored) {
-            // There was IOException when attempting to create a client handler, we ignore this client connection attempt
+            // There was IOException when attempting to create a client handler,
+            // we ignore this client connection attempt
         }
     }
 
@@ -275,13 +287,15 @@ public class Server {
     }
 
     /**
-     * Method that broadcasts already formatted message according to the protocol to specific clients
+     * Method that broadcasts already formatted message
+     * according to the protocol to specific clients.
      *
      * @param message   String formatted protocol message
      * @param usernames List<String> of client usernames
      */
     /*@requires message != null && usernames.size() > 0;
-      @requires (\forall int i; i >= 0 && i < usernames.size(); users.contains(usernames.get(i))); */
+      @requires (\forall int i; i >= 0 && i < usernames.size();
+        users.contains(usernames.get(i))); */
     public void broadCastMessage(String message, List<String> usernames) {
         // Going over all usernames
         for (String username : usernames) {
@@ -289,14 +303,17 @@ public class Server {
             ClientHandler clientHandler = this.clientHandlersReverse.get(username);
 
             // A client handler must exist
-            if (clientHandler == null) return;
+            if (clientHandler == null) {
+                return;
+            }
 
             clientHandler.sendMessage(message);
         }
     }
 
     /**
-     * Method that broadcasts already formatted message according to the protocol to specific clients
+     * Method that broadcasts already formatted message according
+     * to the protocol to specific clients.
      *
      * @param message   String formatted protocol message
      * @param usernames String vararg
@@ -318,7 +335,7 @@ public class Server {
     }
 
     /**
-     * Method that indicates whether the server instance is running
+     * Method that indicates whether the server instance is running.
      * @return true / false
      */
     public boolean isRunning() {
@@ -326,7 +343,7 @@ public class Server {
     }
 
     /**
-     * Starts the server instance
+     * Starts the server instance.
      *
      * @param args command line args --ignored
      */

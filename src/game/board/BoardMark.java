@@ -4,12 +4,13 @@ public enum BoardMark {
     WHITE("⚪"), BLACK("⚫"), EMPTY(" ");
 
     /**
-     * Private String that holds each enums constants value
+     * Private String that holds each enums constants value.
      */
     private final String markString;
 
     /**
-     * Private constructor for each enum constant
+     * Private constructor for each enum constant.
+     *
      * @param markString String enum value
      */
     private BoardMark(String markString) {
@@ -17,12 +18,13 @@ public enum BoardMark {
     }
 
     /**
-     * Holds all values (WHITE, BLACK, EMPTY)
+     * Holds all values (WHITE, BLACK, EMPTY).
      */
-    private static final BoardMark[] values = values();
+    private static final BoardMark[] VALUES = values();
 
     /**
-     * Has to be called on a particular color board mark, either WHITE or BLACK, to get the opposite one.
+     * Has to be called on a particular color board mark,
+     * either WHITE or BLACK, to get the opposite one.
      * @return the next BoardMark.
      */
     /*@ ensures WHITE.getOpposite().equals(BLACK);
@@ -30,13 +32,16 @@ public enum BoardMark {
       @ ensures EMPTY.getOpposite().equals(EMPTY);
       @ pure;*/
     public BoardMark getOpposite() {
-        if (this.equals(EMPTY)) return EMPTY;
+        if (this.equals(EMPTY)) {
+            return EMPTY;
+        }
 
-        return values[(this.ordinal() + 1) % 2];
+        return VALUES[(this.ordinal() + 1) % 2];
     }
 
     /**
-     * Returns the String representation of each enum constant
+     * Returns the String representation of each enum constant.
+     *
      * @return String enum representation
      */
     @Override

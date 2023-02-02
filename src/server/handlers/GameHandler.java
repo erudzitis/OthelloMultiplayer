@@ -15,37 +15,39 @@ import java.util.Optional;
 
 /**
  * Runnable that handles assigned games state on the server
- * by receiving forwarded messages from either one of ClientHandlers (2 client participants for each game),
- * validating them, updating state and finally performing server related room object clean up
+ * by receiving forwarded messages from either one of ClientHandlers
+ * (2 client participants for each game), validating them,
+ * updating state and finally performing server related room object clean up.
  */
 public class GameHandler implements Runnable {
     /**
-     * Holds the reference of the server
+     * Holds the reference of the server.
      */
     private final Server server;
 
     /**
-     * Hold the reference back to the GameRoom that initialized this GameHandler, needed for clean up purposes
+     * Hold the reference back to the GameRoom that initialized this GameHandler,
+     * needed for clean up purposes.
      */
     private final GameRoom gameRoom;
 
     /**
-     * Holds the reference to the particular board game
+     * Holds the reference to the particular board game.
      */
     private final BoardGame game;
 
     /**
-     * Reader for incoming protocol move sequences
+     * Reader for incoming protocol move sequences.
      */
     Reader input;
 
     /**
-     * Indicates whether room clean up is performed after the game has ended
+     * Indicates whether room clean up is performed after the game has ended.
      */
     private boolean isCleanupPerformed = false;
 
     /**
-     * Initializes server and game reference
+     * Initializes server and game reference.
      *
      * @param server Server reference
      * @param gameRoom GameRoom reference that initialized the GameHandler
@@ -60,7 +62,7 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Returns the game instance that is assigned to this game handler
+     * Returns the game instance that is assigned to this game handler.
      *
      * @return BoardGame instance
      */
@@ -71,7 +73,7 @@ public class GameHandler implements Runnable {
     /**
      * Indicates whether the GameHandler object has completed its cleanup process,
      * clean up process will only be initializes if the game is over or directly requested
-     * by the client handler
+     * by the client handler.
      *
      * @return boolean
      */
@@ -80,7 +82,8 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Internal method that performs room clean up after the end of the game
+     * Internal method that performs room clean up after the end of the game.
+     *
      * @param clientUsernames List<String> client usernames in a game
      */
     private void performCleanup(List<String> clientUsernames) {
@@ -98,7 +101,9 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Internal method that checks the game state, being the game over, it informs all clients and performs cleanup
+     * Internal method that checks the game state, being the game over,
+     * it informs all clients and performs cleanup.
+     *
      * @param clientUsernames List<String> client usernames in a game
      */
     private void checkGameOver(List<String> clientUsernames) {
@@ -109,11 +114,12 @@ public class GameHandler implements Runnable {
 
             // If there's no winner, it's a draw
             if (winner == null) {
-                this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DRAW, null), clientUsernames);
+                this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DRAW, null),
+                    clientUsernames);
             } else {
                 // Otherwise, we inform winner and looser separately
-                this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.VICTORY, winner.username()),
-                        clientUsernames);
+                this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.VICTORY,
+                        winner.username()), clientUsernames);
             }
 
             // Perform cleanup
@@ -158,14 +164,16 @@ public class GameHandler implements Runnable {
                 // indicating that the move is not valid
                 BoardMove clientMove = this.game.locationToMove(desiredLocation);
 
-                // Move is not valid, sending ERROR protocol message back to the client through client handler
+                // Move is not valid, sending ERROR protocol message back to the client
+                // through client handler
                 if (clientMove == null) {
-                    this.server.getClientHandlersReverse().get(
-                            this.game.getPlayerTurn().username()).sendMessage(Protocol.errorFormat());
+                    this.server.getClientHandlersReverse().get(this.game.getPlayerTurn().username())
+                        .sendMessage(Protocol.errorFormat());
                     break;
                 }
 
-                List<String> clientUsernames = this.game.getPlayers().stream().map(Player::username).toList();
+                List<String> clientUsernames = this.game.getPlayers().stream()
+                    .map(Player::username).toList();
 
                 // Otherwise, keeping track of the move on the server
                 this.game.doMove(clientMove);
@@ -182,11 +190,14 @@ public class GameHandler implements Runnable {
 
                 // Getting the player that still remains in the game
                 Optional<Player> remainingPlayer = this.game.getPlayers().stream()
-                        .filter(player -> !player.username().equals(disconnectedUsername)).findFirst();
+                    .filter(player -> !player.username().equals(disconnectedUsername))
+                    .findFirst();
 
-                // Sending game over sequence to the remaining player that is going to become the winner automatically
+                // Sending game over sequence to the remaining player
+                // that is going to become the winner automatically
                 remainingPlayer.ifPresent(player ->
-                    this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DISCONNECT, null), player.username())
+                    this.server.broadCastMessage(Protocol.gameOverFormat(Protocol.DISCONNECT,
+                        null), player.username())
                 );
 
                 // Cleaning up the room

@@ -12,26 +12,29 @@ import java.io.PrintWriter;
 
 /**
  * "Helper" class that holds together the game handler of a particular game room,
- * and provides functionality for messages to be forwarded to the GameHandler assigned to a particular ongoing game
+ * and provides functionality for messages to be forwarded
+ * to the GameHandler assigned to a particular ongoing game.
  */
 public class GameRoom {
     /**
-     * Holds reference back to the game handler of the particular room
+     * Holds reference back to the game handler of the particular room.
      */
     private final GameHandler gameHandler;
 
     /**
-     * Input for game handler that is going to be reading dispatched messages from the client handler
+     * Input for game handler
+     * that is going to be reading dispatched messages from the client handler.
      */
     private final PipedReader pipedInput;
 
     /**
-     * Output for client handler to write to
+     * Output for client handler to write to.
      */
     private final PrintWriter pipedOutput;
 
     /**
-     * Constructor, initializes the game room, game handler
+     * Constructor, initializes the game room, game handler.
+     *
      * @throws IOException if IO communication creation with GameHandler that gets assigned fails
      */
     public GameRoom(Server server, String firstUsername, String secondUsername) throws IOException {
@@ -60,7 +63,7 @@ public class GameRoom {
     }
 
     /**
-     * Method that forwards protocol message to the GameHandler instance
+     * Method that forwards protocol message to the GameHandler instance.
      *
      * @param message String protocol message to be forwarded
      */
@@ -69,7 +72,7 @@ public class GameRoom {
     }
 
     /**
-     * Attempts to close all IO's
+     * Attempts to close all IO's.
      */
     public void close() {
         try {

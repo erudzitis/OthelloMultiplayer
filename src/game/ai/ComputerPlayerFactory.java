@@ -1,14 +1,15 @@
 package game.ai;
 
 /**
- * Factory generator class for ComputerPlayer
+ * Factory generator class for ComputerPlayer.
  */
 public class ComputerPlayerFactory {
     private static final int PROFOUND = 2;
 
     /**
      * Generates ComputerPlayer instance based on the provided level. If level is invalid,
-     * naive Strategy ComputerPlayer instance will be returned
+     * naive Strategy ComputerPlayer instance will be returned.
+     *
      * @param level int, level of the AI. From 1 to 2
      * @return ComputerPlayer instance
      */

@@ -13,62 +13,63 @@ import java.util.List;
 
 /**
  * Client class that communicates with ClientHandler on the server,
- * and acts as a controller between Server and client GameRoom
+ * and acts as a controller between Server and client GameRoom.
  */
 public class Client {
     /**
-     * Holds the socket of the server that client has connected to
+     * Holds the socket of the server that client has connected to.
      */
     private Socket socket;
 
     /**
-     * Holds the output of the server socket
+     * Holds the output of the server socket.
      */
     private PrintWriter serverSocketOutput;
 
     /**
-     * Holds the assigned message handler that will handle the incoming messages from server
+     * Holds the assigned message handler that will handle the incoming messages from server.
      */
     private final MessageOperator messageOperator;
 
     /**
-     * Holds and handles the current ongoing game that the client is playing (if any)
+     * Holds and handles the current ongoing game that the client is playing (if any).
      */
     private final GameRoom gameRoom;
 
     /**
-     * Holds the desired username of the client
+     * Holds the desired username of the client.
      */
     private String username;
 
     /**
      * Indicates whether the initial handshake between the client and server has been established
-     * Only having established a handshake, can the client and server continue with any other communication
+     * Only having established a handshake, can the client and server continue
+     * with any other communication.
      */
     private boolean handshakeEstablished = false;
 
     /**
-     * Indicates whether the client has successfully claimed a username on the server and logged in
+     * Indicates whether the client has successfully claimed a username on the server and logged in.
      */
     private boolean successfullyLoggedIn = false;
 
     /**
-     * Holds the list of all extensions the server supports
+     * Holds the list of all extensions the server supports.
      */
     private final List<String> serverSupportedExtensions = new ArrayList<>();
 
     /**
-     * Stores the list of all supported extensions by the client
+     * Stores the list of all supported extensions by the client.
      */
     protected static final List<String> SUPPORTED_EXTENSIONS = new ArrayList<>();
 
     /**
-     * Holds the description of the client
+     * Holds the description of the client.
      */
     public static final String CLIENT_DESCRIPTION = "Yellow 7 Client";
 
     /**
-     * Constructor that initializes each client and provides a default MessageHandler
+     * Constructor that initializes each client and provides a default MessageHandler.
      *
      * @param username String, desired client username
      */
@@ -81,7 +82,8 @@ public class Client {
     }
 
     /**
-     * States whether a handshake between the client and the server (that the client has connected to) has been established
+     * States whether a handshake between the client and the server
+     * (that the client has connected to) has been established.
      *
      * @return true if client has connected to a server and handshake is established
      */
@@ -109,7 +111,9 @@ public class Client {
       @requires !successfullyLoggedIn;
       @assignable username; @*/
     public void setUsername(String desiredUsername) {
-        if (this.isSuccessfullyLoggedIn()) return;
+        if (this.isSuccessfullyLoggedIn()) {
+            return;
+        }
 
         this.username = desiredUsername;
     }
@@ -157,7 +161,8 @@ public class Client {
         // Attempting to connect and initialize the socket and IO
         try {
             this.socket = new Socket(address, port);
-            this.serverSocketOutput = new PrintWriter(new OutputStreamWriter(this.socket.getOutputStream()));
+            this.serverSocketOutput = new PrintWriter(new OutputStreamWriter(
+                this.socket.getOutputStream()));
         } catch (IOException e) {
             return false;
         }
@@ -168,15 +173,18 @@ public class Client {
         // 'Listening' for incoming commands,
         // assigning new thread for it, to not block the main calling one
         new Thread(() -> {
-            try (BufferedReader socketInputReader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()))) {
+            try (BufferedReader socketInputReader = new BufferedReader(
+                new InputStreamReader(this.socket.getInputStream()))) {
                 // Reading line by line
                 String line;
 
                 while ((line = socketInputReader.readLine()) != null) {
                     // Attempting to finalize the handshake
                     try {
-                        // Attempting to automatically log in with the desired username after having established a handshake
-                        // It's possible that server will deny our username, therefore we will need to handle that case
+                        // Attempting to automatically log in with the desired username
+                        // after having established a handshake
+                        // It's possible that server will deny our username,
+                        // therefore we will need to handle that case
                         this.handleIncomingHandshake(line);
                     } catch (HandshakeFailed e) {
                         // After sending initial handshake message,
@@ -198,12 +206,14 @@ public class Client {
     }
 
     /**
-     * Internal method that closes the client connection
+     * Internal method that closes the client connection.
      */
     private void close() {
         try {
             this.socket.close();
-        } catch (IOException ignored) {}
+            this.messageOperator.incomingMessage(SysoutOperator.ERROR + " Connection lost!");
+            System.exit(0);
+        } catch (IOException ignored) { }
     }
 
     /**
@@ -212,13 +222,16 @@ public class Client {
     /*@requires !successfullyLoggedIn; @*/
     private void attemptLogin() {
         // Checking if the client is already logged in
-        if (this.isSuccessfullyLoggedIn()) return;
+        if (this.isSuccessfullyLoggedIn()) {
+            return;
+        }
 
         this.sendMessage(Protocol.loginFormat(this.username));
     }
 
     /**
-     * Method that re-assigns the client username and attempts to log in again, if not already logged in
+     * Method that re-assigns the client username and attempts to log in again,
+     * if not already logged in.
      *
      * @param newUsername String new desired username
      */
@@ -233,19 +246,21 @@ public class Client {
      */
     /*@requires !isHandshakeEstablished(); @*/
     private void sendInitializeHandshake() {
-        this.sendMessage(Protocol.helloFormat(Client.CLIENT_DESCRIPTION, Client.SUPPORTED_EXTENSIONS));
+        this.sendMessage(Protocol.helloFormat(Client.CLIENT_DESCRIPTION,
+            Client.SUPPORTED_EXTENSIONS));
     }
 
     /**
-     * Method that joins the player queue waiting for a game, if the client is already in the queue,
-     * calling this method again will remove him from it
+     * Method that joins the player queue waiting for a game,
+     * if the client is already in the queue,
+     * calling this method again will remove him from it.
      */
     public void joinQueue() {
         this.sendMessage(Protocol.queueFormat());
     }
 
     /**
-     * Method that forwards clients desired move to the server for verification
+     * Method that forwards clients desired move to the server for verification.
      *
      * @param location int, location index on board
      */
@@ -255,14 +270,15 @@ public class Client {
     }
 
     /**
-     * Method that inquiries the server about the list of connected client usernames
+     * Method that inquiries the server about the list of connected client usernames.
      */
     public void queryUserList() {
         this.sendMessage(Protocol.listFormat());
     }
 
     /**
-     * Internal method that (assuming the message is actually a handshake acknowledgment incoming from server),
+     * Internal method that
+     * (assuming the message is actually a handshake acknowledgment incoming from server),
      * handles the handshake and updates the servers supported extensions
      *
      * @param line String line that we received from the server
@@ -274,14 +290,18 @@ public class Client {
       @signals_only HandshakeFailed; */
     private void handleIncomingHandshake(String line) throws HandshakeFailed {
         // Handshake is already established
-        if (this.isHandshakeEstablished()) return;
+        if (this.isHandshakeEstablished()) {
+            return;
+        }
 
         // Getting the supported extensions extracted from server protocol message
         List<String> supportedExtensions = Protocol.helloExtract(line);
 
         // Not a valid handshake acknowledgment from server,
         // why did the server message us? ignoring!
-        if (supportedExtensions == null) throw new HandshakeFailed();
+        if (supportedExtensions == null) {
+            throw new HandshakeFailed();
+        }
 
         // Appending all extensions that server supports (if any)
         this.serverSupportedExtensions.addAll(supportedExtensions);
@@ -294,7 +314,8 @@ public class Client {
     }
 
     /**
-     * Internal method that handles all incoming commands from the server client handler to the client
+     * Internal method that handles all incoming commands
+     * from the server client handler to the client.
      *
      * @param line String line that we received from the server
      */
@@ -306,22 +327,27 @@ public class Client {
             // We have received indication from the server that login was successful
             case Protocol.LOGIN -> {
                 this.successfullyLoggedIn = true;
-                this.messageOperator.incomingMessage(SysoutOperator.SUCCESS + " Successfully logged in!");
+                this.messageOperator.incomingMessage(SysoutOperator.SUCCESS
+                    + " Successfully logged in!");
             }
             case Protocol.ALREADY_LOGGED_IN -> {
                 this.successfullyLoggedIn = false;
-                this.messageOperator.incomingMessage(SysoutOperator.ERROR + " A user with the provided username already exists!");
+                this.messageOperator.incomingMessage(SysoutOperator.ERROR
+                    + " A user with the provided username already exists!");
             }
-            case Protocol.LIST -> this.messageOperator.incomingMessage(SysoutOperator.INFO + " Online users: " + Protocol.listExtract(line));
-            case Protocol.ERROR -> this.messageOperator.incomingMessage(SysoutOperator.ERROR + " Provided move is invalid!");
+            case Protocol.LIST -> this.messageOperator.incomingMessage(SysoutOperator.INFO
+                + " Online users: " + Protocol.listExtract(line));
+            case Protocol.ERROR -> this.messageOperator.incomingMessage(SysoutOperator.ERROR
+                + " Provided move is invalid! " + line);
             // All game related things are forwarded to the GameHandler
-            case Protocol.NEWGAME, Protocol.MOVE, Protocol.GAMEOVER -> this.gameRoom.forwardToGameHandler(line);
+            case Protocol.NEWGAME, Protocol.MOVE, Protocol.GAMEOVER ->
+                this.gameRoom.forwardToGameHandler(line);
         }
     }
 
 
     /**
-     * Method that sends already protocol formatted message to the server socket output
+     * Method that sends already protocol formatted message to the server socket output.
      *
      * @param message String protocol message
      */

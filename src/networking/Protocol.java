@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class Protocol {
     /**
-     * Protocol constants
+     * Protocol constants.
      */
     public static final String HELLO = "HELLO";
     public static final String LOGIN = "LOGIN";
@@ -31,12 +31,12 @@ public class Protocol {
     public static final String DRAW = "DRAW";
 
     /**
-     * Enforcing the constructor to be private, so no instances could be made
+     * Enforcing the constructor to be private, so no instances could be made.
      */
-    private Protocol() {}
+    private Protocol() { }
 
     /**
-     * Internal method that returns an array of protocol message 'contents'
+     * Internal method that returns an array of protocol message 'contents'.
      *
      * @param message String protocol message
      * @return String[] message 'contents'
@@ -46,7 +46,7 @@ public class Protocol {
     }
 
     /**
-     * Method that extracts the main protocol method out of protocol message
+     * Method that extracts the main protocol method out of protocol message.
      *
      * @param message String protocol message
      * @return String main protocol command
@@ -56,8 +56,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String for initial message that gets sent from the client after establishing connection,
-     * or sent as response from the server.
+     * Method that generates String for initial message that gets sent from the client
+     * after establishing connection, or sent as response from the server.
      * HELLO~<client description>[~extension]*
      *
      * @param description String, descriptive representation of the server / client
@@ -68,26 +68,33 @@ public class Protocol {
         // Formatting the main protocol message part
         StringBuilder protocolMessageBuilder = new StringBuilder(HELLO + SEPARATOR + description);
         // Adding all extensions, if any
-        for (String extension: extensions) protocolMessageBuilder.append(SEPARATOR).append(extension);
+        for (String extension: extensions) {
+            protocolMessageBuilder.append(SEPARATOR).append(extension);
+        }
 
         return protocolMessageBuilder.toString();
     }
 
     /**
-     * Method that formats hello protocol message and extracts all supported extensions
+     * Method that formats hello protocol message and extracts all supported extensions.
      *
      * @param message String protocol HELLO message
-     * @return null if the protocol message is not HELLO, List<String> supported extensions otherwise
+     * @return null if the protocol message is not HELLO,
+     * List<String> supported extensions otherwise
      */
     public static List<String> helloExtract(String message) {
         String[] messageSplit = split(message);
         String messageHello = messageSplit[0];
 
         // Checking if message adheres to the protocol
-        if (!messageHello.equals(HELLO)) return null;
+        if (!messageHello.equals(HELLO)) {
+            return null;
+        }
 
         // Checking if there are even any extensions
-        if (messageSplit.length == 2) return new ArrayList<>();
+        if (messageSplit.length == 2) {
+            return new ArrayList<>();
+        }
 
         // Otherwise, all extensions (if any) are found after description
         String[] extensions = Arrays.copyOfRange(messageSplit, 2, messageSplit.length);
@@ -96,7 +103,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message that gets sent from the client in 'login' process when choosing a username.
+     * Method that generates String message that gets sent from the client in 'login' process
+     * when choosing a username.
      * LOGIN~<username>
      *
      * @param username String, desired username
@@ -107,7 +115,7 @@ public class Protocol {
     }
 
     /**
-     * Method that attempts to extract the provided user username from logic protocol message
+     * Method that attempts to extract the provided user username from logic protocol message.
      *
      * @param message String protocol message
      * @return null, if extraction failed, otherwise String, user provided username
@@ -121,7 +129,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for server that gets sent back to client to indicate a successful log in
+     * Method that generates String message for server that gets sent back to client to indicate
+     * a successful log in.
      * LOGIN
      * .
      * @return String formatted message
@@ -142,7 +151,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for client that requests a list of clients who are currently logged into the server.
+     * Method that generates String message for client that requests
+     * a list of clients who are currently logged into the server
      * Allowed at any point once the client is logged in, including during a game.
      * LIST
      *
@@ -153,24 +163,30 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for server that responds to LIST command from client.
-     * Lists the different usernames that are currently logged into the server, including the requesting client.
+     * Method that generates String message for server that responds to LIST command from client
+     * Lists the different usernames that are currently logged into the server,
+     * including the requesting client.
      * LIST[~username]*
      *
-     * @param usernames Collection<String> Collection of usernames of people that are connected to the server
+     * @param usernames Collection<String> Collection of usernames of people
+     *                  that are connected to the server
      * @return String formatted message
      */
     public static String listFormat(Collection<String> usernames) {
         // Formatting the main protocol message part
         StringBuilder protocolMessageBuilder = new StringBuilder(LIST);
         // Adding all usernames
-        for (String username: usernames) protocolMessageBuilder.append(SEPARATOR).append(username);
+        for (String username: usernames) {
+            protocolMessageBuilder.append(SEPARATOR).append(username);
+        }
 
         return protocolMessageBuilder.toString();
     }
 
     /**
-     * Method that extracts the list of client usernames that are logged in the server from LIST protocol message
+     * Method that extracts the list of client usernames that are logged in the server
+     * from LIST protocol message.
+     *
      * @param message String LIST protocol message
      * @return List<String> of client usernames
      */
@@ -184,7 +200,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for client that wants to indicate the server for joining the queue.
+     * Method that generates String message for client
+     * that wants to indicate the server for joining the queue.
      * The server will place the client at the back of the queue of waiting players.
      * When the command is issued a second time, the client is removed from the queue.
      * The server does not send a reply.
@@ -197,7 +214,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for server that informs all users that were put into a new game.
+     * Method that generates String message for server
+     * that informs all users that were put into a new game.
      * NEWGAME~<player1 name>~<player2 name>
      *
      * @param username1 String, username of the first player that was placed into the game
@@ -209,7 +227,9 @@ public class Protocol {
     }
 
     /**
-     * Method that formats new game protocol message and extracts all client usernames associated to the new game
+     * Method that formats new game protocol message
+     * and extracts all client usernames associated to the new game.
+     *
      * @param message String protocol message
      * @return List<String> of client usernames placed into a new game
      */
@@ -218,7 +238,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for client, when client wants to indicate the server which move he desires to perform,
+     * Method that generates String message for client,
+     * when client wants to indicate the server which move he desires to perform,
      * or for server that forwards the performed move to all clients in a game.
      * If location == 64, it represents a passing move.
      * MOVE~<N>
@@ -231,7 +252,8 @@ public class Protocol {
     }
 
     /**
-     * Method that formats move protocol message and extracts int location of the move
+     * Method that formats move protocol message and extracts int location of the move.
+     *
      * @param message String protocol message
      * @return int, extracted move location
      */
@@ -240,7 +262,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for server to indicate all clients in a game that a game is over.
+     * Method that generates String message for server
+     * to indicate all clients in a game that a game is over.
      * GAMEOVER~<reason>[~winner]
      *
      * @param reason DISCONNECT or VICTORY or DRAW
@@ -252,7 +275,8 @@ public class Protocol {
     }
 
     /**
-     * Method that extracts the game over reason protocol message
+     * Method that extracts the game over reason protocol message.
+     *
      * @param message String protocol message
      * @return null, if extraction failed, otherwise String reason
      */
@@ -265,7 +289,8 @@ public class Protocol {
     }
 
     /**
-     * Method that optionally the winner from protocol message
+     * Method that optionally the winner from protocol message.
+     *
      * @param message String protocol message
      * @return Optional<String>
      */
@@ -279,7 +304,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message for server to respond to a client query indicating that it's invalid
+     * Method that generates String message for server to respond
+     * to a client query indicating that it's invalid.
      * ERROR
      *
      * @return String formatted message
@@ -289,7 +315,8 @@ public class Protocol {
     }
 
     /**
-     * Method that generates String message indicating that a particular client has disconnected
+     * Method that generates String message indicating that a particular client has disconnected.
+     *
      * @param username String client username that has disconnected
      * @return String formatted message
      */
@@ -298,7 +325,9 @@ public class Protocol {
     }
 
     /**
-     * Method that formats disconnect protocol message and the name of the client that had disconnected
+     * Method that formats disconnect protocol message
+     * and the name of the client that had disconnected.
+     *
      * @param message String protocol message
      * @return String client username that has disconnected
      */

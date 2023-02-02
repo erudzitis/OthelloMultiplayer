@@ -13,7 +13,6 @@ import game.ai.ComputerPlayerFactory;
 import game.board.exceptions.AlgebraicNotationConversionFailed;
 import game.board.Board;
 import game.board.BoardMark;
-import game.board.BoardMove;
 import game.players.Player;
 import networking.Protocol;
 
@@ -25,42 +24,44 @@ import java.util.List;
 import java.util.Queue;
 
 /**
- * Runnable that handles assigned game state on the client, holds the location queue for LocationHandler,
- * and ComputerPlayer AI instance. Spawns thread for LocationHandler and AIHandler
+ * Runnable that handles assigned game state on the client,
+ * holds the location queue for LocationHandler, and ComputerPlayer AI instance.
+ * Spawns thread for LocationHandler and AIHandler.
  */
 public class GameHandler implements Runnable {
     /**
-     * Holds the reference to the particular board game
+     * Holds the reference to the particular board game.
      */
     private BoardGame game;
 
     /**
-     * Holds the reference to the current initialized client
+     * Holds the reference to the current initialized client.
      */
     private final Client client;
 
     /**
-     * Queue that holds the queue of approved move locations by the server that the client should keep track of
+     * Queue that holds the list of approved move locations by the server
+     * that the game handler should keep track of and apply.
      */
     private final Queue<Integer> locationQueue = new LinkedList<>();
 
     /**
-     * Input for game handler that is going to be reading dispatched messages from the client ui
+     * Input for game handler that is going to be reading dispatched messages from the client UI.
      */
     private final Reader input;
 
     /**
-     * Holds the reference to the AI assigned to the current game
+     * Holds the reference to the AI assigned to the current game.
      */
     private ComputerPlayer computerPlayer;
 
     /**
-     * Holds whether the computer player can determine move
+     * Holds whether the computer player can determine move.
      */
     private boolean computerPlayerTurn = false;
 
     /**
-     * Constructor, assigns the reference to the current initialized client and takes piped input
+     * Constructor, assigns the reference to the current initialized client and takes piped input.
      *
      * @param client Client instance
      * @param input Reader piped input that will receive forwarded messages from Client
@@ -71,7 +72,7 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Method that returns the queue of un-applied server validated move locations
+     * Method that returns the queue of un-applied server validated move locations.
      *
      * @return Queue<Integer> of board move index locations
      */
@@ -91,7 +92,9 @@ public class GameHandler implements Runnable {
       @pure; @*/
     private void addToQueue(int location) {
         synchronized (this.locationQueue) {
-            if (this.game == null) return;
+            if (this.game == null) {
+                return;
+            }
 
             this.locationQueue.add(location);
             this.locationQueue.notify();
@@ -127,7 +130,9 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Method that states if at any given moment at the game, the AI is playing for the current client
+     * Method that states if at any given moment at the game,
+     * the AI is playing for the current client.
+     *
      * @return true / false
      */
     /*@pure; @*/
@@ -136,7 +141,8 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Method that returns the ComputerPlayer instance attached to the current game
+     * Method that returns the ComputerPlayer instance attached to the current game.
+     *
      * @return null, if there is no AI assigned at the moment, ComputerPlayer otherwise
      */
     /*@pure; @*/
@@ -172,8 +178,9 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Method that sends appropriate protocol message indicating that the turn is to be skipped
-     * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
+     * Method that sends appropriate protocol message indicating that the turn is to be skipped.
+     * @throws GameNotFoundException if there is no ongoing game at the moment
+     *                               that the method is called
      */
     /*@requires hasOngoingGame();
       @signals_only GameNotFoundException; @*/
@@ -187,9 +194,11 @@ public class GameHandler implements Runnable {
     }
 
     /**
-     * Method that outputs SAN formatted move hints to the client
-     * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
-     * @throws GameTurnViolationException if the method is called at the moment when its opponents game turn
+     * Method that outputs SAN formatted move hints to the client.
+     * @throws GameNotFoundException if there is no ongoing game at the moment
+     *                               that the method is called
+     * @throws GameTurnViolationException if the method is called at the moment
+     *                               when its opponents game turn
      */
     /*@requires hasOngoingGame();
       @requires isClientsTurn();
@@ -209,10 +218,10 @@ public class GameHandler implements Runnable {
 
         this.game.getValidMoves(this.game.getPlayerTurn())
                 .forEach(boardMove -> {
-                    String converted = Board.convertToSAN(boardMove.getRow(), boardMove.getColumn());
+                    String convert = Board.convertToSAN(boardMove.getRow(), boardMove.getColumn());
 
-                    if (hintResult.indexOf(converted) == -1) {
-                        hintResult.append(converted).append(" ");
+                    if (hintResult.indexOf(convert) == -1) {
+                        hintResult.append(convert).append(" ");
                     }
                 });
 
@@ -225,10 +234,13 @@ public class GameHandler implements Runnable {
      *
      * @param desiredMoveSAN String, if null is passed then move is interpreted as a skipping move,
      *                       otherwise SAN move
-     * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
-     * @throws GameTurnViolationException if the method is called at the moment when its opponents game turn
+     * @throws GameNotFoundException if there is no ongoing game at the moment
+     *                               that the method is called
+     * @throws GameTurnViolationException if the method is called at the moment
+     *                               when its opponents game turn
      * @throws InvalidMoveException if the provided move is not valid
-     * @throws AlgebraicNotationConversionFailed if provided move in SAN couldn't be converted to a valid location on board
+     * @throws AlgebraicNotationConversionFailed if provided move in SAN couldn't be converted
+     *                                           to a valid location on board
      * @throws AIAssignedException if AI is assigned and determining moves for the client
      */
     /*@requires hasOngoingGame();
@@ -236,8 +248,9 @@ public class GameHandler implements Runnable {
       @requires !isComputerPlaying();
       @signals_only GameNotFoundException, GameTurnViolationException, InvalidMoveException,
        AlgebraicNotationConversionFailed, AIAssignedException; @*/
-    public void handleMove(String desiredMoveSAN) throws GameNotFoundException, GameTurnViolationException,
-            InvalidMoveException, AlgebraicNotationConversionFailed, AIAssignedException {
+    public void handleMove(String desiredMoveSAN) throws GameNotFoundException,
+        GameTurnViolationException, InvalidMoveException, AlgebraicNotationConversionFailed,
+        AIAssignedException {
         // Check if there is ongoing game
         if (this.game == null) {
             throw new GameNotFoundException();
@@ -263,11 +276,10 @@ public class GameHandler implements Runnable {
             // Attempting to convert the location
             int convertedLocation = Board.convertFromSAN(desiredMoveSAN);
 
-            // Location was successfully converted, need to validate if it's even valid move in current games state
-            BoardMove desiredMove = this.game.locationToMove(convertedLocation);
-
-            if (desiredMove == null || !this.game.isValidMove(desiredMove)) {
-                throw new InvalidMoveException(desiredMove);
+            // Location was successfully converted,
+            // need to validate if it's even valid move in current games state
+            if (this.game.locationToMove(convertedLocation) == null) {
+                throw new InvalidMoveException(desiredMoveSAN);
             }
 
             // Otherwise move is valid, we send it over to the server
@@ -282,7 +294,8 @@ public class GameHandler implements Runnable {
     /**
      * Method that assigns an AI to the ongoing game
      * @param level int, level of the AI. From 1 to 2
-     * @throws GameNotFoundException if there is no ongoing game at the moment that the method is called
+     * @throws GameNotFoundException if there is no ongoing game at the moment
+     *                               that the method is called
      * @throws AIAssignedException if an AI is already assigned to the current game
      */
     /*@requires hasOngoingGame();
@@ -326,12 +339,13 @@ public class GameHandler implements Runnable {
                 switch (command) {
                     case Protocol.NEWGAME -> handleNewGame(line);
                     case Protocol.GAMEOVER -> handleGameOver(line);
-                    // Extracting the move that was validated by the server and passed to use by the client,
+                    // Extracting the move that was validated by the server
+                    // and passed to use by the client,
                     // adding the move to the queue for the LocationHandler to handle
                     case Protocol.MOVE -> this.addToQueue(Protocol.moveExtract(line));
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) { }
     }
 
     /**
@@ -349,7 +363,8 @@ public class GameHandler implements Runnable {
         this.game = new OthelloGame(firstPlayer, secondPlayer);
 
         // Forwarding 'notifications' to the client
-        this.client.getMessageOperator().incomingMessage(SysoutOperator.GAME + " A new match found!")
+        this.client.getMessageOperator().incomingMessage(SysoutOperator.GAME
+                + " A new match found!")
                 .incomingMessage(String.format("%s Player '%s' %s against Player '%s' %s",
                         SysoutOperator.INFO, firstPlayer.username(), firstPlayer.mark(),
                         secondPlayer.username(), secondPlayer.mark()))
@@ -360,12 +375,14 @@ public class GameHandler implements Runnable {
         // Clearing the location queue
         this.locationQueue.clear();
 
-        // Spawning a LocationHandler that will be responsible for applying the positions on the board
+        // Spawning a LocationHandler
+        // that will be responsible for applying the positions on the board
         new Thread(new LocationHandler(this)).start();
     }
 
     /**
-     * Internal helper method that formats game over reason
+     * Internal helper method that formats game over reason.
+     *
      * @param line String protocol line
      * @return String formatted, or null if reason wasn't determined
      */
@@ -373,7 +390,9 @@ public class GameHandler implements Runnable {
         String reason = Protocol.gameOverExtractReason(line);
 
         // Invalid reason
-        if (reason == null) return null;
+        if (reason == null) {
+            return null;
+        }
 
         StringBuilder descriptive = new StringBuilder(SysoutOperator.FINISH + " Game over, ");
 
@@ -402,13 +421,17 @@ public class GameHandler implements Runnable {
       @modifies computerPlayer; */
     private void handleGameOver(String line) {
         // There must be an ongoing game for it to end
-        if (this.game == null) return;
+        if (this.game == null) {
+            return;
+        }
 
         // Extracting the game over formatted reason
         String reasonFormatted = this.gameOverFormat(line);
 
         // Invalid reason
-        if (reasonFormatted == null) return;
+        if (reasonFormatted == null) {
+            return;
+        }
 
         // Informing the client
         this.client.getMessageOperator().incomingMessage(reasonFormatted);

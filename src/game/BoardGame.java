@@ -27,13 +27,15 @@ public interface BoardGame {
     boolean isWinner(Player player);
 
     /**
-     * Method that attempts to retrieve the winner of the game, assuming the game is over
+     * Method that attempts to retrieve the winner of the game, assuming the game is over.
+     *
      * @return null, if it's a draw, Player the winner otherwise
      */
     Player getWinner();
 
     /**
-     * Method that checks if a specific player is connected to the particular game
+     * Method that checks if a specific player is connected to the particular game.
+     *
      * @param player Player implementation
      * @return true / false
      */
@@ -41,20 +43,23 @@ public interface BoardGame {
     boolean isPlayerConnected(Player player);
 
     /**
-     * Method that removes player from the list of players
+     * Method that removes player from the list of players.
+     *
      * @param player Player instance
      */
     void removePlayer(Player player);
 
     /**
-     * Method that returns all connected players to the particular src.game.
+     * Method that returns all connected players to the particular game.
+     *
      * @return List<Player>, list of players
      */
     /*@ pure; @*/
     List<Player> getPlayers();
 
     /**
-     * Method that returns the Player of current turn
+     * Method that returns the Player of current turn.
+     *
      * @return Player
      */
     Player getPlayerTurn();
@@ -70,12 +75,21 @@ public interface BoardGame {
     boolean isValidMove(BoardMove move);
 
     /**
-     * Method that attempts to convert index location on board to it's corresponding move object.
-     * Assumes that the move is intended to be constructed for the player that has its turn in the game
+     * Method that attempts to convert index location on board to it's corresponding move object
+     * Assumes that the move is intended to be constructed for the player
+     * that has its turn in the game.
+     *
      * @param location int, location index on the board
      * @return null, if the conversion failed, otherwise BoardMove
      */
     BoardMove locationToMove(int location);
+
+    /**
+     * Method that returns a passing move.
+     *
+     * @return BoardMove that is passing
+     */
+    BoardMove passingMove();
 
     /**
      * Method that returns all valid moves that a player / bot could perform in this turn.
@@ -88,20 +102,23 @@ public interface BoardGame {
     List<BoardMove> getValidMoves(Player player);
 
     /**
-     * Method that performs a move, respecting that the proposed move is valid
+     * Method that performs a move and its outflanks, respecting that the proposed move is valid.
+     *
      * @param move BoardMove
      */
     /*@ requires isValidMove(move); @*/
     void doMove(BoardMove move);
 
     /**
-     * Method that returns the board associated to the current game
+     * Method that returns the board associated to the current game.
+     *
      * @return Board
      */
     Board getBoard();
 
     /**
-     * Method that returns the deep copy of current games state
+     * Method that returns the deep copy of current games state.
+     *
      * @return Deep copied BoardGame instance
      */
     BoardGame deepCopy();

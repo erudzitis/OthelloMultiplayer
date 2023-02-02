@@ -8,26 +8,26 @@ import java.io.PipedWriter;
 import java.io.PrintWriter;
 
 /**
- * "Helper" class that holds together the game handler of a particular game room
+ * "Helper" class that holds together the game handler of a particular game room.
  */
 public class GameRoom {
     /**
-     * Holds reference to the game handler that handles current ongoing client game
+     * Holds reference to the game handler that handles current ongoing client game.
      */
     private final GameHandler gameHandler;
 
     /**
-     * Input for game handler that is going to be reading dispatched messages from the client ui
+     * Input for game handler that is going to be reading dispatched messages from the client UI.
      */
     private PipedReader pipedInput;
 
     /**
-     * Output for client handler to write to
+     * Output for client handler to write to.
      */
     private PrintWriter pipedOutput;
 
     /**
-     * Returns the GameHandler instance associated to the GameRoom
+     * Returns the GameHandler instance associated to the GameRoom.
      *
      * @return GameHandler instance
      */
@@ -36,13 +36,13 @@ public class GameRoom {
     }
 
     /**
-     * Initializes the game room, game handler
+     * Initializes the game room, game handler.
      */
     public GameRoom(Client client) {
         try {
             this.pipedInput = new PipedReader();
             this.pipedOutput = new PrintWriter(new PipedWriter(this.pipedInput), true);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) { }
 
         this.gameHandler = new GameHandler(client, this.pipedInput);
 
@@ -51,7 +51,7 @@ public class GameRoom {
     }
 
     /**
-     * Method that forwards protocol message to the GameHandler instance
+     * Method that forwards protocol message to the GameHandler instance.
      *
      * @param message String protocol message
      */

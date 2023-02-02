@@ -11,36 +11,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class that acts as a middle-man between the Server and Client and provides reciprocal communication,
- * handles incoming protocol commands from the Client 'through' Server
+ * Class that acts as a middle-man between the Server and Client,
+ * and provides reciprocal communication,
+ * handles incoming protocol commands from the Client 'through' Server.
  */
 public class ClientHandler implements Runnable {
     /*@public invariant clientSocket != null;
       @public invariant server != null;*/
 
     /**
-     * Holds the socket of the assigned client
+     * Holds the socket of the assigned client.
      */
     private final /*@spec_public; @*/ Socket clientSocket;
 
     /**
-     * Holds the output of the client socket
+     * Holds the output of the client socket.
      */
     private final PrintWriter clientSocketOutput;
 
     /**
-     * Holds the reference back to the server
+     * Holds the reference back to the server.
      */
     private final /*@spec_public; @*/ Server server;
 
     /**
      * Indicates whether the initial handshake between the client and server has been established
-     * Only having established a handshake, can the client and server continue with any other communication
+     * Only having established a handshake,
+     * can the client and server continue with any other communication.
      */
     private boolean handshakeAcknowledged = false;
 
     /**
-     * Holds the list of all extensions the client supports
+     * Holds the list of all extensions the client supports.
      */
     private final List<String> clientSupportedExtensions = new ArrayList<>();
 
@@ -48,7 +50,8 @@ public class ClientHandler implements Runnable {
      * Constructor that initializes each client handler
      *
      * @param clientSocket Socket of the client
-     * @throws IOException if IO communication establishment with the clients Socket was not successful
+     * @throws IOException if IO communication establishment with the clients Socket
+     *                     was not successful
      */
     /*@requires server != null;
       @requires clientSocket != null;
@@ -60,7 +63,8 @@ public class ClientHandler implements Runnable {
         // Attempting to initialize wrappers for client IO
         // OutputStreamWriter converts the incoming chars to bytes,
         // buffered wrappers are for convenience / performance reasons
-        this.clientSocketOutput = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        this.clientSocketOutput = new PrintWriter(new OutputStreamWriter(
+            clientSocket.getOutputStream()));
     }
 
     /**
@@ -68,7 +72,8 @@ public class ClientHandler implements Runnable {
      */
     @Override
     public void run() {
-        try (BufferedReader clientSocketInput = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+        try (BufferedReader clientSocketInput = new BufferedReader(
+            new InputStreamReader(clientSocket.getInputStream()))) {
             // Reading line by line
             String line;
 
@@ -95,16 +100,18 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Internal method that sends acknowledgment HELLO protocol sequence to the client
+     * Internal method that sends acknowledgment HELLO protocol sequence to the client.
      */
     private void sendAcknowledgeHandshake() {
         // Sending the handshake acknowledgment to the client
-        this.sendMessage(Protocol.helloFormat(Server.SERVER_DESCRIPTION, Server.SUPPORTED_EXTENSIONS));
+        this.sendMessage(Protocol.helloFormat(Server.SERVER_DESCRIPTION,
+            Server.SUPPORTED_EXTENSIONS));
     }
 
     /**
-     * Internal method that (assuming the message is actually a handshake initialization incoming from client),
-     * acknowledges the handshake updates the clients supported extensions
+     * Internal method that
+     * (assuming the message is actually a handshake initialization incoming from client),
+     * acknowledges the handshake updates the clients supported extensions.
      *
      * @param line String protocol message read from input
      * @throws HandshakeFailed if the incoming message is not HELLO protocol adherent
@@ -114,13 +121,17 @@ public class ClientHandler implements Runnable {
       @signals_only HandshakeFailed; */
     private void acknowledgeHandshake(String line) throws HandshakeFailed {
         // Handshake is already acknowledged
-        if (this.handshakeAcknowledged) return;
+        if (this.handshakeAcknowledged) {
+            return;
+        }
 
         // Getting the supported extensions extracted from client protocol message
         List<String> supportedExtensions = Protocol.helloExtract(line);
 
         // Not a valid handshake message, ignoring!
-        if (supportedExtensions == null) throw new HandshakeFailed();
+        if (supportedExtensions == null) {
+            throw new HandshakeFailed();
+        }
 
         // Appending all extensions that client supports (if any)
         this.clientSupportedExtensions.addAll(supportedExtensions);
@@ -134,7 +145,9 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Method that states if the current client that the client handler is assigned to is logged into the server
+     * Method that states if the current client that the client handler is assigned to
+     * is logged into the server.
+     *
      * @return true / false
      */
     public boolean isClientLoggedIn() {
@@ -142,13 +155,13 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Internal method that attempts to terminate client connection
+     * Internal method that attempts to terminate client connection.
      */
     private void terminateConnection() {
         try {
             this.clientSocket.close();
             this.server.clientDisconnected(this);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) { }
     }
 
     /**
@@ -166,14 +179,18 @@ public class ClientHandler implements Runnable {
             case Protocol.LOGIN -> this.handleLoginCommand(line);
             case Protocol.LIST -> {
                 // Client must be logged in to perform this action
-                if (!isClientLoggedIn()) break;
+                if (!isClientLoggedIn()) {
+                    break;
+                }
 
                 // Sends client the list of all logged-in user usernames
                 this.sendMessage(Protocol.listFormat(this.server.getUserUsernames()));
             }
             case Protocol.QUEUE -> {
                 // Client must be logged in to perform this action
-                if (!isClientLoggedIn()) break;
+                if (!isClientLoggedIn()) {
+                    break;
+                }
 
                 // Client wants to join \ leave the queue (if already placed in the queue)
                 // However, if client is already in a game, he should not be able to be put in queue
@@ -181,7 +198,9 @@ public class ClientHandler implements Runnable {
             }
             case Protocol.MOVE -> {
                 // Client must be logged in to perform this action
-                if (!isClientLoggedIn()) break;
+                if (!isClientLoggedIn()) {
+                    break;
+                }
                 this.handleMoveCommand(line);
             }
             case Protocol.DISCONNECT -> this.terminateConnection();
@@ -189,14 +208,16 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Internal method that handles the login command issued by the client
+     * Internal method that handles the login command issued by the client.
+     *
      * @param line String protocol message
      */
     private void handleLoginCommand(String line) {
         // A user can log in if the provided username is not taken
         String clientDesiredUsername = Protocol.loginExtract(line);
 
-        // Username is invalid, taken, or the username is too long, client has to try to log in again
+        // Username is invalid, taken, or the username is too long,
+        // client has to try to log in again
         if (clientDesiredUsername == null
                 || this.server.isUsernameTaken(clientDesiredUsername)
                 || clientDesiredUsername.length() > Server.MAXIMUM_USERNAME_LENGTH) {
@@ -209,21 +230,26 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Internal method that handles the move command issued by the client
+     * Internal method that handles the move command issued by the client.
+     *
      * @param line String protocol message
      */
     private void handleMoveCommand(String line) {
         // Client wants to attempt to perform a move,
         // need to forward the client desired move to respective game handler
         // Check if the client is even in a game
-        if (!this.server.getRooms().containsKey(this)) return;
+        if (!this.server.getRooms().containsKey(this)) {
+            return;
+        }
 
         // Getting reference to the game room
         GameRoom gameRoom = this.server.getRooms().get(this);
 
         // Check if it even is the clients turn
         if (!gameRoom.getGameHandler().getGame().getPlayerTurn().username()
-                .equals(this.server.getClientHandlers().get(this))) return;
+                .equals(this.server.getClientHandlers().get(this))) {
+            return;
+        }
 
         // Writing to the pipe input of the game handler
         gameRoom.forwardToGameHandler(line);

@@ -1,7 +1,6 @@
 package game.ai;
 
 import game.BoardGame;
-import game.OthelloGame;
 import game.board.Board;
 import game.board.BoardMark;
 import game.board.BoardMove;
@@ -9,7 +8,7 @@ import game.board.BoardMove;
 import java.util.*;
 
 /**
- * Minimax algorithm, going for corners
+ * Minimax algorithm, going for corners.
  */
 public class MiniMaxCornerStrategy implements Strategy {
     //test depth
@@ -18,8 +17,10 @@ public class MiniMaxCornerStrategy implements Strategy {
     private static final List<Integer> VALUE_4 = Arrays.asList(0, 7, 63, 56);
     private static final List<Integer> VALUE_NEG_3 = Arrays.asList(1, 6, 8, 15, 48, 55, 57, 62);
     private static final List<Integer> VALUE_NEG_4 = Arrays.asList(9, 14, 49, 54);
-    private static final List<Integer> VALUE_2 = Arrays.asList(2, 3, 4, 5, 16, 24, 32, 40, 23, 31, 39, 47, 58, 59, 60, 61);
-    private static final List<Integer> VALUE_NEG_1 = Arrays.asList(10, 11, 12, 13, 17, 25, 33, 41, 22, 30, 38, 46, 50, 51, 52, 53);
+    private static final List<Integer> VALUE_2 = Arrays.asList(2, 3, 4, 5, 16, 24, 32, 40, 23,
+        31, 39, 47, 58, 59, 60, 61);
+    private static final List<Integer> VALUE_NEG_1 = Arrays.asList(10, 11, 12, 13, 17, 25,
+        33, 41, 22, 30, 38, 46, 50, 51, 52, 53);
     private static final List<Integer> VALUE_1 = Arrays.asList(27, 28, 35, 36, 18, 21, 42, 45);
     private static final Map<Integer, List<Integer>> VALUES = Map.ofEntries(
             Map.entry(4, VALUE_4),
@@ -38,11 +39,12 @@ public class MiniMaxCornerStrategy implements Strategy {
 
         //pass move if no move available
         if (game.getValidMoves(game.getPlayerTurn()).isEmpty()) {
-            return game.locationToMove(OthelloGame.PASSING_MOVE_INDEX);
+            return game.passingMove();
         }
 
         for (BoardMove move : game.getValidMoves(game.getPlayerTurn())) {
-            //create a copy for each move and change the state of that copy to a state with the move done
+            //create a copy for each move and change the state
+            // of that copy to a state with the move done
             BoardGame gameCopy = game.deepCopy();
             gameCopy.doMove(move);
 
@@ -75,9 +77,9 @@ public class MiniMaxCornerStrategy implements Strategy {
             int baseValue = valueEntry.getKey();
 
             for (int fieldLocation: valueEntry.getValue()) {
-                if (board.getField(fieldLocation).equals(gameTurnMark)) {
+                if (board.getField(fieldLocation).equals(BoardMark.BLACK)) {
                     score += baseValue;
-                } else if (board.getField(fieldLocation).equals(oppositeMark)) {
+                } else if (board.getField(fieldLocation).equals(BoardMark.WHITE)) {
                     score += baseValue * (-1);
                 }
             }
@@ -110,7 +112,9 @@ public class MiniMaxCornerStrategy implements Strategy {
                 scores.add(score);
             }
 
-            if (scores.isEmpty()) return 0;
+            if (scores.isEmpty()) {
+                return 0;
+            }
 
             //check if the current depth is max or min
             if (isMax) {

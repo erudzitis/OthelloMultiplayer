@@ -1,11 +1,11 @@
 package game.board.exceptions;
 
 /**
- * Exception that indicates that number conversion from or to Algebraic Notation was not successful
+ * Exception that indicates that number conversion from or to Algebraic Notation was not successful.
  */
 public class AlgebraicNotationConversionFailed extends Exception {
     /**
-     * Constructor
+     * Constructor.
      * @param message String SAN that couldn't be converted
      */
     public AlgebraicNotationConversionFailed(String message) {

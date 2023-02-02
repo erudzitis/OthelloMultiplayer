@@ -58,7 +58,7 @@ class OthelloGameTest {
      */
     @Test
     void testPassingMove() throws AlgebraicNotationConversionFailed {
-        Assertions.assertTrue(this.boardGame.locationToMove(64).isPassing());
+        Assertions.assertTrue(this.boardGame.passingMove().isPassing());
         Assertions.assertFalse(this.boardGame.locationToMove(
                 Board.convertFromSAN("D3")).isPassing());
     }
@@ -72,11 +72,11 @@ class OthelloGameTest {
 
         while (!this.boardGame.isGameOver()) {
             List<BoardMove> validMoves = this.boardGame.getValidMoves(this.boardGame.getPlayerTurn());
-            // if we have any valid move to perform, we randomly choose it, otherwise we skip the turn
-            BoardMove chosenMove = validMoves.isEmpty() ? this.boardGame.locationToMove(64)
-                    : validMoves.get(random.nextInt(validMoves.size()));
 
-            this.boardGame.doMove(chosenMove);
+            // if we have any valid move to perform, we randomly choose it, otherwise we skip the turn
+            this.boardGame.doMove(!validMoves.isEmpty()
+                    ? validMoves.get(random.nextInt(validMoves.size()))
+                    : this.boardGame.passingMove());
 
             System.out.println(this.boardGame.getBoard());
         }

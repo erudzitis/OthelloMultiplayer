@@ -6,14 +6,15 @@ import java.util.*;
 
 public class Board {
     /**
-     * Holds the row and column dimensions of the board
+     * Holds the row and column dimensions of the board.
      */
     public static final int DIMENSION = 8;
 
     /**
-     * Internal 2D Array that holds all direction extension point pairs (row, column) for a board field, respectively
+     * Internal 2D Array that holds all direction extension point pairs (row, column)
+     * for a board field, respectively
      * UP, DOWN, LEFT, RIGHT,
-     * UP-LEFT, UP-RIGHT, DOWN-LEFT, DOWN-RIGHT
+     * UP-LEFT, UP-RIGHT, DOWN-LEFT, DOWN-RIGHT.
      */
     private static final int[][] EXTENSION_PAIRS = new int[][]{
             {-1, 0}, {1, 0}, {0, -1}, {0, 1},
@@ -21,12 +22,12 @@ public class Board {
     };
 
     /**
-     * 1D Array that holds all board fields
+     * 1D Array that holds all board fields.
      */
     private final BoardMark[] fields;
 
     /**
-     * Constructor that initializes a fresh board with default positions
+     * Constructor that initializes a fresh board with default positions.
      */
     /*@ensures countMarks(BoardMark.BLACK) == 2;
       @ensures countMarks(BoardMark.WHITE) == 2;
@@ -80,7 +81,9 @@ public class Board {
       @ requires column >= 0 && column < DIMENSION;
       @ pure; */
     public static int getIndex(int row, int column) {
-        if (!(row >= 0 && row < DIMENSION && column >= 0 && column < DIMENSION)) return -1;
+        if (!(row >= 0 && row < DIMENSION && column >= 0 && column < DIMENSION)) {
+            return -1;
+        }
 
         return (row * DIMENSION) + column;
     }
@@ -99,8 +102,8 @@ public class Board {
     }
 
     /**
-     * Attempts to convert board game Standard Algebraic Notation board game location to integer location,
-     * case-insensitive (from A1 to H8)
+     * Attempts to convert board game Standard Algebraic Notation board game location
+     * to integer location, case-insensitive (from A1 to H8)
      *
      * @param algebraicNotation String SAN board location
      * @return int, converted location on board
@@ -109,13 +112,16 @@ public class Board {
     /*@requires "H8".compareTo(algebraicNotation) >= 0 && "H8".compareTo(algebraicNotation) <= 7;
       @signals_only AlgebraicNotationConversionFailed;
       @pure;*/
-    public static int convertFromSAN(String algebraicNotation) throws AlgebraicNotationConversionFailed {
-        // First character is letter representing column, second character is number representing row
+    public static int convertFromSAN(String algebraicNotation)
+        throws AlgebraicNotationConversionFailed {
+        // First character is letter representing column,
+        // second character is number representing row
         char[] notationChars = algebraicNotation.toCharArray();
         int column = Character.toUpperCase(notationChars[0]) - 65;
         int row = Character.getNumericValue(notationChars[1]) - 1;
 
-        // ASCII A decimal value is 65, H decimal value is 72, therefore column must be between 0 and 7
+        // ASCII A decimal value is 65, H decimal value is 72,
+        // therefore column must be between 0 and 7
         // Row values range from 1 to 8, converted should be between 0 and 7
         if (column < 0 || column > 7 || row < 0 || row > 7) {
             throw new AlgebraicNotationConversionFailed(algebraicNotation);
@@ -125,7 +131,8 @@ public class Board {
     }
 
     /**
-     * Converts board game row, column location to Standard Algebraic Notation board game location
+     * Converts board game row, column location to Standard Algebraic Notation board game location.
+     *
      * @param row int, row location on board
      * @param column int, column location on board
      * @return String SAN converted location on board
@@ -136,17 +143,14 @@ public class Board {
 
     /**
      * Method that returns the current mark of the board at a particular field.
+     *
      * @param index int, location on board
      * @return BoardMark, or null if the field is not valid
      */
-    /*@ requires isField(index);
-      @ ensures \result == BoardMark.EMPTY || \result == BoardMark.WHITE || \result == BoardMark.BLACK;
-      @
-      @ also
-      @
-      @ requires !isField(index);
-      @ ensures \result == null;
-      @*/
+    /*@requires isField(index);
+      @ensures \result == BoardMark.EMPTY || \result == BoardMark.WHITE
+        || \result == BoardMark.BLACK;
+      @pure; */
     public BoardMark getField(int index) {
         return !isField(index) ? null : this.fields[index];
     }
@@ -161,13 +165,16 @@ public class Board {
       @signals_only IllegalArgumentException; */
     public void setField(int index, BoardMark mark) throws IllegalArgumentException {
         // Checking if the index is valid
-        if (!isField(index)) throw new IllegalArgumentException("Field with provided index is not valid!");
+        if (!isField(index)) {
+            throw new IllegalArgumentException("Field with provided index is not valid!");
+        }
 
         this.fields[index] = mark;
     }
 
     /**
-     * Method that sets the mark position and flips all the fields in between the starting (just placed mark),
+     * Method that sets the mark position,
+     * and flips all the fields in between the starting (just placed mark),
      * and end mark that supports it
      *
      * @param startRow int, row location of new mark
@@ -181,8 +188,10 @@ public class Board {
     /*@requires isField(getIndex(startRow, startCol));
       @requires isField(getIndex(endRow, endColumn));
       @requires mark.equals(BoardMark.WHITE) || mark.equals(BoardMark.BLACK);
-      @requires (\exists int j; j > 0 && j < EXTENSION_PAIRS.length; EXTENSION_PAIRS[j][0] == extensionRow && EXTENSION_PAIRS[j][1] == extensionColumn); */
-    public void flipFields(int startRow, int startCol, int endRow, int endColumn, int extensionRow, int extensionColumn, BoardMark mark) {
+      @requires (\exists int j; j > 0 && j < EXTENSION_PAIRS.length;
+        EXTENSION_PAIRS[j][0] == extensionRow && EXTENSION_PAIRS[j][1] == extensionColumn); */
+    public void flipFields(int startRow, int startCol, int endRow, int endColumn,
+                           int extensionRow, int extensionColumn, BoardMark mark) {
         // Setting the target field that will complete the outflanking
         setField(getIndex(startRow, startCol), mark);
 
@@ -190,7 +199,7 @@ public class Board {
         int updatedRow = startRow + extensionRow;
         int updatedColumn = startCol + extensionColumn;
 
-        while (!((updatedRow == endRow) && (updatedColumn == endColumn))) {
+        while (!(updatedRow == endRow && updatedColumn == endColumn)) {
             // Flipping the field
             setField(getIndex(updatedRow, updatedColumn), mark);
 
@@ -217,8 +226,9 @@ public class Board {
      * @return true if all fields are occupied
      */
     /*@ ensures
-        (\forall int i; (i >= 0 && i < DIMENSION*DIMENSION); fields[i] == BoardMark.BLACK || fields[i] == BoardMark.WHITE)
-            ==> \result == true;
+        (\forall int i; (i >= 0 && i < DIMENSION*DIMENSION);
+            fields[i] == BoardMark.BLACK || fields[i] == BoardMark.WHITE)
+                ==> \result == true;
       @ pure;
       @*/
     public boolean isFull() {
@@ -245,7 +255,8 @@ public class Board {
     /*@requires isField(getIndex(row, column));
       @requires targetMark.equals(BoardMark.WHITE) || targetMark.equals(BoardMark.BLACK);
       @ensures (\forall int i; i > 0 && i < \result.size();
-        (\exists int j; j > 0 && j < EXTENSION_PAIRS.length; EXTENSION_PAIRS[j].equals(\result.get(i))));
+        (\exists int j; j > 0 && j < EXTENSION_PAIRS.length;
+            EXTENSION_PAIRS[j].equals(\result.get(i))));
       @pure;*/
     public List<int[]> extensionPointSupport(int row, int column, BoardMark targetMark) {
         // Initializing result storage
@@ -256,11 +267,17 @@ public class Board {
             int extensionRow = extensionPoint[0];
             int extensionColumn = extensionPoint[1];
 
-            // Checking if addition of current extension pair locates a position on board that holds target mark,
-            // and if the field in that direction besides the target mark is in bounds of the board
-            if (isField(getIndex(row + extensionRow, column + extensionColumn)) &&
-                    getField(getIndex(row + extensionRow, column + extensionColumn)).equals(targetMark) &&
-                    isField(getIndex(row + extensionRow * 2, column + extensionColumn * 2))) {
+            // Checking if addition of current extension pair locates a position on board,
+            // that holds target mark, and if the field in that direction besides the target mark
+            // is in bounds of the board
+            int deducedRow = row + extensionRow;
+            int deducedColumn = column + extensionColumn;
+            int extrapolatedRow = row + extensionRow * 2;
+            int extrapolatedColumn = row + extensionRow * 2;
+
+            if (isField(getIndex(deducedRow, deducedColumn))
+                && getField(getIndex(deducedRow, deducedColumn)).equals(targetMark)
+                && isField(getIndex(extrapolatedRow, extrapolatedColumn))) {
                 // We have a candidate
                 results.add(extensionPoint);
             }
@@ -270,7 +287,8 @@ public class Board {
     }
 
     /**
-     * Method that checks if there is support mark already placed on the board that could outflank the opponent,
+     * Method that checks if there is support mark already placed on the board
+     * that could outflank the opponent,
      * if so, returns the board position pair of that outflanking mark (row, column),
      * if no mark is found, null is returned.
      *
@@ -288,23 +306,32 @@ public class Board {
       @
       @requires !isField(getIndex(row + extensionRow, column + extensionColumn));
       @ensures \result == null;*/
-    public List<Integer> extensionLineSupport(int row, int column, int extensionRow, int extensionColumn, BoardMark mark) {
+    public List<Integer> extensionLineSupport(int row, int column, int extensionRow,
+                                              int extensionColumn, BoardMark mark) {
         // Checking if we have found the 'our' mark
-        if (getField(getIndex(row, column)).equals(mark)) return new ArrayList<>(Arrays.asList(row, column));
-
-        // Check if we are not going out of bounds with our next step
-        if (!isField(getIndex(row + extensionRow, column + extensionColumn))) return null;
+        if (getField(getIndex(row, column)).equals(mark)) {
+            return new ArrayList<>(Arrays.asList(row, column));
+        }
 
         // We haven't found outflanking mark, we continue
         // Check if there is no empty space between
-        if (isFieldEmpty(getIndex(row + extensionRow, column + extensionColumn))) return null;
+        if (isFieldEmpty(getIndex(row, column))) {
+            return null;
+        }
+
+        // Check if we are not going out of bounds with our next step
+        if (!isField(getIndex(row + extensionRow, column + extensionColumn))) {
+            return null;
+        }
 
         // Otherwise, we recursively call the method until we run in either of the conditions
-        return extensionLineSupport(row + extensionRow, column + extensionColumn, extensionRow, extensionColumn, mark);
+        return extensionLineSupport(row + extensionRow, column + extensionColumn,
+            extensionRow, extensionColumn, mark);
     }
 
     /**
-     * Method that computes the available valid moves for either provided board mark (white or black).
+     * Method that computes the available valid moves for either provided board mark
+     * (white or black).
      * A move is valid if it outflanks the opponent marks in any row direction.
      *
      * @param mark BoardMark enum type for whom to calculate the valid moves
@@ -328,23 +355,31 @@ public class Board {
             // Going over all columns of each row
             for (int column = 0; column < DIMENSION; column++) {
                 // Checking if the current field is empty
-                if (!isFieldEmpty(getIndex(row, column))) continue;
+                if (!isFieldEmpty(getIndex(row, column))) {
+                    continue;
+                }
 
                 // Current field is empty, we need to check in all possible directions,
                 // if there is opponent mark placed
-                Collection<int[]> extensions = extensionPointSupport(row, column, mark.getOpposite());
+                Collection<int[]> extensions = extensionPointSupport(row, column,
+                    mark.getOpposite());
 
                 // No surrounding opponent marks found, continuing to the next board field position
-                if (extensions.isEmpty()) continue;
+                if (extensions.isEmpty()) {
+                    continue;
+                }
 
-                // We have the extension points, we want to check if there's a supporting board mark placed of our own,
+                // We have the extension points,
+                // we want to check if there's a supporting board mark placed of our own,
                 // that will lead to opponents board marks to be outflanked and captured
                 for (int[] validExtension: extensions) {
                     int validExtensionRow = validExtension[0];
                     int validExtensionColumn = validExtension[1];
 
-                    // Searching for supporting mark. Adding 2X the extension values to the search row and column,
-                    // because we have checked that the position after the conjoining opponent mark is bounds of the board
+                    // Searching for supporting mark.
+                    // Adding 2X the extension values to the search row and column,
+                    // because we have checked that the position after the conjoining opponent mark
+                    // is in bounds of the board
                     List<Integer> support = extensionLineSupport(row + (validExtensionRow * 2),
                             column + (validExtensionColumn * 2),
                             validExtensionRow,
@@ -371,7 +406,8 @@ public class Board {
     }
 
     /**
-     * Method that counts the amount of particular marks placed on the board
+     * Method that counts the amount of particular marks placed on the board.
+     *
      * @param mark BoardMark target mark
      * @return int, count of placed board marks
      */
@@ -383,7 +419,7 @@ public class Board {
     }
 
     /**
-     * Internal method used for building the string representation of the board
+     * Internal method used for building the string representation of the board.
      * @param left String left character
      * @param right String right character
      * @param middle String middle character
@@ -399,22 +435,24 @@ public class Board {
     }
 
     /**
-     * Method that builds and returns the textual representation of the current boards state
+     * Method that builds and returns the textual representation of the current boards state.
      * @return String board state representation
      */
     @Override
     public String toString() {
         // Top of the board
-        StringBuilder result = new StringBuilder("\u200A\u200A\u200A\u0020\u0020\u0020\u0020\u0020A" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020B" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020C" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020D" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020E" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020F" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020G" +
-                "\u0020\u0020\u0020\u0020\u0020\u0020H");
+        StringBuilder result = new StringBuilder(
+            "\u200A\u200A\u200A\u0020\u0020\u0020\u0020\u0020A"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020B"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020C"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020D"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020E"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020F"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020G"
+                + "\u0020\u0020\u0020\u0020\u0020\u0020H");
 
-        result.append(toStringHelper("\u0020\u0020┏━━━", "━━━┓", "━━━┯━━━".repeat(DIMENSION - 1)));
+        result.append(toStringHelper("\u0020\u0020┏━━━", "━━━┓",
+            "━━━┯━━━".repeat(DIMENSION - 1)));
 
         // Going over each row
         for (int row = 0; row < DIMENSION; row++) {
@@ -425,13 +463,17 @@ public class Board {
                 BoardMark storedField = fields[getIndex(row, column)];
 
                 // Appending formatted field to the result (Some Unicode shenanigans)
-                result.append(!storedField.equals(BoardMark.EMPTY) ? "\u200A\u200A\u200A\u200A" : "\u0020\u0020").append(storedField);
+                result.append(!storedField.equals(BoardMark.EMPTY)
+                    ? "\u200A\u200A\u200A\u200A" : "\u0020\u0020").append(storedField);
                 result.append((column == DIMENSION - 1) ? "  ┃" : "  │ ");
             }
 
             // If it's a new row, we add delimiter at the top and enforce a new line
-            result.append(row == DIMENSION - 1 ? toStringHelper("\u0020\u0020┗━━━", "━━━┛", "━━━┷━━━".repeat(DIMENSION - 1))
-                    : toStringHelper("\u0020\u0020┠───", "───┨", "───┼───".repeat(DIMENSION - 1)));
+            result.append(row == DIMENSION - 1
+                ? toStringHelper("\u0020\u0020┗━━━", "━━━┛", "━━━┷━━━"
+                    .repeat(DIMENSION - 1))
+                : toStringHelper("\u0020\u0020┠───", "───┨", "───┼───"
+                    .repeat(DIMENSION - 1)));
         }
 
         return result.toString();
