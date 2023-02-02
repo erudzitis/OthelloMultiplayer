@@ -1,9 +1,6 @@
 package client;
 
-import client.exceptions.GameNotFoundException;
-import client.ui.SysUtility;
 import helper.Await;
-import networking.Protocol;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

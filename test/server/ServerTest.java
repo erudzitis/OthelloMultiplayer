@@ -1,7 +1,6 @@
 package server;
 
 import client.Client;
-import game.board.BoardMark;
 import helper.Await;
 import networking.Protocol;
 import org.junit.jupiter.api.Assertions;
@@ -11,7 +10,6 @@ import server.handlers.ClientHandler;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 class ServerTest {

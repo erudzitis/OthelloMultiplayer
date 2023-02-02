@@ -1,6 +1,5 @@
 
 import client.Client;
-import client.ClientTUI;
 import game.board.BoardMark;
 import helper.Await;
 import networking.Protocol;

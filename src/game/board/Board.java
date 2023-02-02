@@ -308,6 +308,12 @@ public class Board {
       @ensures \result == null;*/
     public List<Integer> extensionLineSupport(int row, int column, int extensionRow,
                                               int extensionColumn, BoardMark mark) {
+
+        // Check if we are not going out of bounds currently
+        if (!isField(getIndex(row, column))) {
+            return null;
+        }
+
         // Checking if we have found the 'our' mark
         if (getField(getIndex(row, column)).equals(mark)) {
             return new ArrayList<>(Arrays.asList(row, column));

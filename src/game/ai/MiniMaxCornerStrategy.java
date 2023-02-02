@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class MiniMaxCornerStrategy implements Strategy {
     //test depth
-    private static final int MAX_DEPTH = 3;
+    private static final int MAX_DEPTH = 4;
 
     private static final List<Integer> VALUE_4 = Arrays.asList(0, 7, 63, 56);
     private static final List<Integer> VALUE_NEG_3 = Arrays.asList(1, 6, 8, 15, 48, 55, 57, 62);
@@ -77,9 +77,9 @@ public class MiniMaxCornerStrategy implements Strategy {
             int baseValue = valueEntry.getKey();
 
             for (int fieldLocation: valueEntry.getValue()) {
-                if (board.getField(fieldLocation).equals(BoardMark.BLACK)) {
+                if (board.getField(fieldLocation).equals(gameTurnMark)) {
                     score += baseValue;
-                } else if (board.getField(fieldLocation).equals(BoardMark.WHITE)) {
+                } else if (board.getField(fieldLocation).equals(oppositeMark)) {
                     score += baseValue * (-1);
                 }
             }

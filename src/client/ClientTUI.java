@@ -112,6 +112,20 @@ public class ClientTUI {
      */
     public static int getServerPort(SysUtility sysUtility) {
         return Math.max(0, Math.min(sysUtility.readInteger("⚙ Enter server port number"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             + " to connect to ➨ "), 65535));
     }
 
