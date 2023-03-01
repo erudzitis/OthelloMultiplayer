@@ -6,13 +6,13 @@ Project that contains both client and server part. Server supports many ongoing 
 
 ## Features
 
-    Client side:
+  Client side:
 - Join game queue
 - Play othello game match
 - Assign an 'AI' to the game match
 - Sound effects
 
-    Server side:
+Server side:
 - Handle multiple Socket connections and keep track of game state
 - Handle authentication
 
